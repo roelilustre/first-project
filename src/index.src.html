@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>P&amp;ID Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@400;600&display=swap">
+<style>
+/*CSS*/
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="toolbar">
+    <span class="brand">P&amp;ID DESIGNER</span>
+    <button class="btn" id="bPlay" title="Run / pause (Space)">▶ Play</button>
+    <button class="btn" id="bReset" title="Reset levels and runtime state on all pages">Reset levels</button>
+    <button class="btn" id="bClear" title="Clear canvas (click twice)">Clear canvas</button>
+    <span class="menuwrap"><button class="btn" id="bEx">Examples…</button>
+      <div class="menu" id="mEx"><button data-ex="tank">Tank farm — level control</button><button data-ex="chlor">Chlor-alkali cell room</button><button data-ex="bms">Burner management system (SIS)</button></div></span>
+    <button class="btn" id="bTidy" title="Re-route all lines orthogonally around components">Tidy routes</button>
+    <span class="sep"></span>
+    <select id="selSheet" title="Sheet size"><option value="none">No sheet</option><option value="A4">A4</option><option value="A3">A3</option></select>
+    <select id="selOrient" title="Sheet orientation"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select>
+    <span class="sep"></span>
+    <button class="btn" id="bPng">Save PNG</button>
+    <button class="btn" id="bSave">Save JSON</button>
+    <button class="btn" id="bOpen">Open JSON</button>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    <span class="sep"></span>
+    <select id="selSpeed" title="Simulation speed"><option value="1">1×</option><option value="5">5×</option><option value="10">10×</option><option value="30">30×</option><option value="60">60×</option></select>
+    <button class="btn" id="bSound" title="Alarm horn sound">🔈 Sound on</button>
+    <button class="btn" id="bTheme" title="Light / dark theme">◐</button>
+    <span id="clock" title="Simulated time">00:00:00</span>
+  </header>
+  <div id="main">
+    <div class="edge edge-l" id="edgePal" title="Show components">▶ Components</div><div class="edge edge-r" id="edgeInsp" title="Show inspector">Inspector ◀</div>
+    <aside id="palette"><div class="dockbar"><span>Components</span><button class="dbtn" data-dock="pal" data-d="pin" title="Pinned — click to auto-hide">📌</button></div>
+      <div class="ptop"><input type="text" id="pSearch" placeholder="Search components  ( / )" autocomplete="off"><div id="pcount"></div></div>
+      <div id="ptabs"></div>
+      <div id="plist"></div>
+    </aside>
+    <section id="center">
+      <div id="canvasWrap">
+        
+        <svg id="cv" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="gridp" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="0" cy="0" r="1" fill="var(--grid)"/><circle cx="20" cy="0" r="1" fill="var(--grid)"/><circle cx="0" cy="20" r="1" fill="var(--grid)"/><circle cx="20" cy="20" r="1" fill="var(--grid)"/></pattern>
+          </defs>
+          <g id="view"><g id="gSheet"></g><rect id="gridRect" x="-4000" y="-4000" width="14000" height="12000" fill="url(#gridp)" pointer-events="none"></rect><g id="gConns"></g><g id="gComps"></g><g id="gOver"></g></g>
+        </svg>
+        <div id="zoomb"><button class="btn" id="zOut">−</button><button class="btn" id="zIn">+</button><button class="btn" id="zFit">Fit</button></div>
+        <div id="toasts"></div>
+      </div>
+      <div id="pagebar"></div>
+      <div id="alarmpanel"><div class="almbar" id="almBar"><span class="almtitle">⚠ Alarms <b id="almCount">0</b></span><span class="almtabs"><button class="dbtn on" data-atab="act">Active</button><button class="dbtn" data-atab="hist">History</button></span><span class="almsum" id="almSum"></span><button class="dbtn" data-dock="alm" data-d="pin" title="Pinned — click to auto-hide">📌</button></div><div class="almbody" id="almBody"></div></div>
+      <div id="hud"></div>
+    </section>
+    <aside id="inspector"><div class="dockbar"><span>Inspector</span><button class="dbtn" data-dock="insp" data-d="pin" title="Pinned — click to auto-hide">📌</button></div><div id="inspBody"></div></aside>
+  </div>
+</div>
+<script>
+/*JS*/
+</script>
+</body>
+</html>
