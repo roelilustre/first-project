@@ -66,6 +66,7 @@
     line-height: 1.5;
   }
   main {
+    overflow-x: clip;
     max-width: 1440px;
     margin: 0 auto;
     padding: 28px 20px 48px;
@@ -337,6 +338,10 @@
   @keyframes whirl { to { transform: rotate(360deg); } }
   @keyframes landpop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
   .confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+  /* Lightning layer reaches a little past the rim so bolts can strike in from outside */
+  .lightning { position: absolute; inset: -7%; width: 114%; height: 114%; pointer-events: none; z-index: 1; }
+  #wheel { transition: filter .08s ease; }
+  #wheel.flash { filter: brightness(1.22) saturate(1.15); }
 
   .step {
     display: inline-grid; place-items: center;
@@ -599,6 +604,58 @@
   .result h2 { overflow-wrap: anywhere; }
   @media (pointer: coarse) { .dish-list .dish-name { min-height: 40px; } }
 
+  /* The result card now only appears in the pop-up; on the page it stays hidden as the pop-up's source */
+  .result-col > .result { display: none; }
+  .result-col .history { margin-top: 0; }
+
+  /* Result pop-up after each spin */
+  .result-pop {
+    width: min(520px, calc(100% - 28px));
+    max-height: calc(100svh - 40px);
+    overflow: auto;
+    padding: 0;
+    border: 3px solid #0B154A;
+    border-radius: 24px;
+    background: #FFFFFF;
+    color: #13205A;
+    box-shadow: 0 8px 0 #0B154A, 0 0 0 6px var(--mango), 0 24px 60px rgba(0, 0, 0, .45);
+  }
+  .result-pop[open] { animation: popIn .5s cubic-bezier(.2, 1.5, .4, 1); }
+  .result-pop::backdrop { background: rgba(7, 15, 58, .62); backdrop-filter: blur(3px); }
+  @keyframes popIn { from { opacity: 0; transform: scale(.7) rotate(-3deg); } to { opacity: 1; transform: none; } }
+  .pop-ribbon {
+    background: var(--chili);
+    color: #FFFFFF;
+    text-align: center;
+    padding: 12px 52px;
+    font: 400 clamp(1.15rem, 4.5vw, 1.5rem) "Bangers", "Arial Black", sans-serif;
+    letter-spacing: .04em;
+    text-shadow: 2px 2px 0 #13205A;
+    border-bottom: 3px solid #0B154A;
+  }
+  .pop-close {
+    position: absolute; top: 8px; right: 10px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: 2px solid #FFFFFF;
+    background: rgba(255, 255, 255, .15);
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .pop-close:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+  .pop-body { padding: 20px 22px 6px; }
+  .pop-body .result { border: 0; box-shadow: none; padding: 0; min-height: 0; background: none; }
+  .pop-body .result-art { width: 120px; height: 120px; }
+  .pop-body .again-btn { display: none; }
+  .pop-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px 22px 22px; }
+  .pop-actions .btn { flex: 1 1 160px; min-height: 46px; }
+  @media (max-width: 520px) {
+    .pop-body .result { flex-direction: column; align-items: flex-start; }
+    .pop-body .result-art { width: 96px; height: 96px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .result-pop[open] { animation: none; } }
+
   /* Text that sits directly on the blue page */
   .intro, .menu-hint, .history, .ring-where, #menuStatus { color: var(--on-bg-muted); }
   .group-label { color: var(--mango); }
@@ -643,6 +700,7 @@
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <canvas id="wheel" role="img" aria-label="Food roulette wheel"></canvas>
+        <canvas class="lightning" id="lightning" aria-hidden="true"></canvas>
         <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
         <button class="spin" id="spin" type="button" aria-label="Spin the wheel"><span class="spin-label" id="spinLabel">SPIN!</span></button>
       </div>
@@ -748,6 +806,16 @@
     <p class="status" id="status" role="status"></p>
   </section>
 </main>
+
+<dialog class="result-pop" id="resultPop" aria-labelledby="popTitle">
+  <div class="pop-ribbon"><span id="popTitle">🎉 Bakbak na! Here’s your pick</span></div>
+  <button class="pop-close" id="popClose" type="button" aria-label="Close">✕</button>
+  <div class="pop-body" id="popBody"></div>
+  <div class="pop-actions">
+    <button class="btn" id="popAgain" type="button">🎡 Spin again</button>
+    <button class="btn quiet" id="popDetails" type="button">See details</button>
+  </div>
+</dialog>
 
 <script>
 const DEFAULT_DATA = {
@@ -1928,6 +1996,7 @@ function spin() {
   const t0 = performance.now();
   playWhoosh();
   duckMusic(true);
+  startLightning();
 
   function frame(now) {
     let allDone = true;
@@ -1938,6 +2007,7 @@ function spin() {
       return from + (targets[k] - from) * easeOutQuart(t);
     });
     [rotation, rotDrink, rotDessert] = rots;
+    lightning.progress = Math.min(1, (now - t0) / durations[0]);
     draw();
 
     // Click whenever any ring passes a wedge edge (rate-capped)
@@ -1951,6 +2021,7 @@ function spin() {
     if (!allDone) requestAnimationFrame(frame);
     else {
       winners = { dish: picks[0], drink: picks[1], dessert: picks[2] };
+      stopLightning();
       draw();
       burstConfetti();
       ringPicks = {
@@ -2069,6 +2140,8 @@ function endSpin() {
   void spinBtn.offsetWidth;
   spinBtn.classList.add("landed");
   againBtn.hidden = false;
+  // Let the landing strike and confetti play, then show the result pop-up
+  setTimeout(openResultPopup, reduceMotion ? 150 : 900);
   mealsEl.querySelectorAll(".meal").forEach(b => b.disabled = false);
   dishList.querySelectorAll(".remove").forEach(b => b.disabled = false);
   [modesEl, placesEl, jbCatsEl].forEach(el => el.querySelectorAll(".meal").forEach(b => b.disabled = false));
@@ -2119,6 +2192,180 @@ function burstConfetti() {
     requestAnimationFrame(step);
   })(t0);
 }
+
+// ---------- Lightning while the wheel spins ----------
+const lightningCanvas = document.getElementById("lightning");
+const lightning = { active: false, bolts: [], next: 0, progress: 0, raf: 0, finale: false };
+
+// Jagged line between two points by repeatedly nudging midpoints sideways
+function boltPoints(x1, y1, x2, y2, rough) {
+  let pts = [[x1, y1], [x2, y2]];
+  let disp = rough;
+  while (disp > 1.5) {
+    const out = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1], [bx, by] = pts[i];
+      const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1;
+      const off = (Math.random() - 0.5) * disp;
+      out.push([(ax + bx) / 2 - dy / len * off, (ay + by) / 2 + dx / len * off], pts[i]);
+    }
+    pts = out;
+    disp /= 2;
+  }
+  return pts;
+}
+
+function makeBolt(W, finale) {
+  const c = W / 2;
+  const R = (W / 1.14) / 2 - 8;            // wheel radius inside the larger lightning canvas
+  const a = finale ? -Math.PI / 2 : Math.random() * Math.PI * 2;
+  const paths = [];
+  if (finale || Math.random() < 0.6) {
+    // Strike from outside the rim into the outer ring
+    const a2 = a + (Math.random() - 0.5) * 0.25;
+    const r1 = R * (1.13 + Math.random() * 0.03), r2 = R * (finale ? 0.62 : 0.78 + Math.random() * 0.08);
+    paths.push(boltPoints(c + Math.cos(a) * r1, c + Math.sin(a) * r1, c + Math.cos(a2) * r2, c + Math.sin(a2) * r2, R * 0.16));
+    // A couple of forks
+    const main = paths[0];
+    for (let k = 0; k < (finale ? 3 : 1 + Math.floor(Math.random() * 2)); k++) {
+      const [sx, sy] = main[Math.floor(main.length * (0.3 + Math.random() * 0.4))];
+      const fa = a + (Math.random() - 0.5) * 1.2, fl = R * (0.12 + Math.random() * 0.12);
+      paths.push(boltPoints(sx, sy, sx - Math.cos(fa) * fl * (Math.random() < .5 ? -1 : 1), sy - Math.sin(fa) * fl, R * 0.06));
+    }
+  } else {
+    // Crackle that crawls along the rim
+    const span = 0.35 + Math.random() * 0.35, steps = 6;
+    let prev = null;
+    const pts = [];
+    for (let k = 0; k <= steps; k++) {
+      const t = a + span * k / steps, r = R * (1.01 + (Math.random() - 0.5) * 0.05);
+      const p = [c + Math.cos(t) * r, c + Math.sin(t) * r];
+      if (prev) pts.push(...boltPoints(prev[0], prev[1], p[0], p[1], R * 0.05).slice(1)); else pts.push(p);
+      prev = p;
+    }
+    paths.push(pts);
+  }
+  return { paths, born: performance.now(), life: finale ? 520 : 200 + Math.random() * 160, hue: Math.random() < 0.65 ? "#FFE45C" : "#9FD8FF", width: finale ? 1.6 : 1 };
+}
+
+function playZap(big) {
+  const ac = getAudio(); if (!ac) return;
+  const t = ac.currentTime, len = big ? 0.35 : 0.12;
+  const buf = ac.createBuffer(1, Math.floor(ac.sampleRate * len), ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2) * (Math.random() < 0.3 ? 1 : 0.35);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = big ? 900 : 2500;
+  const g = ac.createGain(); g.gain.value = big ? 0.22 : 0.07;
+  src.connect(f).connect(g).connect(ac.destination);
+  src.start(t);
+}
+
+function flashWheel() {
+  canvas.classList.add("flash");
+  setTimeout(() => canvas.classList.remove("flash"), 90);
+}
+
+function lightningLoop(now) {
+  const cv = lightningCanvas;
+  const W = cv.getBoundingClientRect().width;
+  const ctx2 = cv.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(W * dpr); }
+  ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx2.clearRect(0, 0, W, W);
+
+  // New bolts come fast while the wheel is quick and thin out as it slows (capped at a few per second)
+  if (lightning.active && now >= lightning.next) {
+    lightning.bolts.push(makeBolt(W, false));
+    if (Math.random() < 0.35) { flashWheel(); playZap(false); }
+    const p = lightning.progress;
+    lightning.next = now + 140 + p * 420 + Math.random() * 180;
+  }
+
+  lightning.bolts = lightning.bolts.filter(b => now - b.born < b.life);
+  ctx2.lineCap = "round";
+  ctx2.lineJoin = "round";
+  lightning.bolts.forEach(b => {
+    const k = 1 - (now - b.born) / b.life;
+    const flicker = Math.random() < 0.15 ? 0.4 : 1;
+    b.paths.forEach((pts, pi) => {
+      const draw = (width, color, blur) => {
+        ctx2.beginPath();
+        pts.forEach(([x, y], i) => i ? ctx2.lineTo(x, y) : ctx2.moveTo(x, y));
+        ctx2.lineWidth = width * b.width * (pi ? 0.6 : 1);
+        ctx2.strokeStyle = color;
+        ctx2.shadowColor = b.hue;
+        ctx2.shadowBlur = blur;
+        ctx2.stroke();
+      };
+      ctx2.globalAlpha = k * flicker;
+      draw(7, b.hue + "55", 22);
+      draw(3, b.hue, 12);
+      draw(1.4, "#FFFFFF", 4);
+    });
+  });
+  ctx2.globalAlpha = 1;
+  ctx2.shadowBlur = 0;
+
+  if (lightning.active || lightning.bolts.length) lightning.raf = requestAnimationFrame(lightningLoop);
+  else ctx2.clearRect(0, 0, W, W);
+}
+
+function startLightning() {
+  if (reduceMotion) return;
+  lightning.active = true;
+  lightning.progress = 0;
+  lightning.next = performance.now() + 60;
+  cancelAnimationFrame(lightning.raf);
+  lightning.raf = requestAnimationFrame(lightningLoop);
+}
+
+// One big strike onto the pointer when the wheel lands
+function stopLightning() {
+  if (reduceMotion || !lightning.active) return;
+  lightning.active = false;
+  const W = lightningCanvas.getBoundingClientRect().width;
+  lightning.bolts.push(makeBolt(W, true));
+  flashWheel();
+  playZap(true);
+  cancelAnimationFrame(lightning.raf);
+  lightning.raf = requestAnimationFrame(lightningLoop);
+}
+
+// ---------- Result pop-up ----------
+const resultPop = document.getElementById("resultPop");
+const popBody = document.getElementById("popBody");
+function openResultPopup() {
+  if (spinning || resultEl.classList.contains("empty")) return;
+  // Copy the result card into the pop-up (without ids so nothing is duplicated)
+  const copy = resultEl.cloneNode(true);
+  copy.removeAttribute("aria-live");
+  copy.classList.remove("pop");
+  copy.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+  copy.removeAttribute("id");
+  const h = copy.querySelector("h2");
+  if (h) h.setAttribute("aria-live", "polite");
+  popBody.innerHTML = "";
+  popBody.appendChild(copy);
+  try { resultPop.showModal(); } catch (e) { resultPop.setAttribute("open", ""); }
+  document.getElementById("popAgain").focus();
+}
+function closeResultPopup() {
+  if (resultPop.open) resultPop.close();
+}
+document.getElementById("popClose").addEventListener("click", closeResultPopup);
+document.getElementById("popAgain").addEventListener("click", () => {
+  closeResultPopup();
+  againBtn.click();
+});
+document.getElementById("popDetails").addEventListener("click", () => {
+  closeResultPopup();
+  const target = recipeEl.hidden ? canvas : recipeEl;
+  target.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: recipeEl.hidden ? "center" : "start" });
+});
+// Tap outside the card to close
+resultPop.addEventListener("click", e => { if (e.target === resultPop) closeResultPopup(); });
 
 // ---------- Recipe panel ----------
 const recipeEl = document.getElementById("recipe");
