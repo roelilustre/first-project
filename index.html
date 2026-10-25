@@ -754,6 +754,21 @@
   }
   @media (prefers-reduced-motion: reduce) { .bulbs, .slot-spin, .slot-window.landed .payline { animation: none; } .lever-stick, .lever-ball { transition: none; } }
 
+  /* ---------- Auto time of day ---------- */
+  .auto-row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: -6px 0 20px; }
+  .auto-btn {
+    font: 800 .88rem "Nunito", system-ui, sans-serif; color: #FFFFFF;
+    background: rgba(255,255,255,.08); border: 2px dashed rgba(255,255,255,.7); border-radius: 999px;
+    padding: 6px 14px; min-height: 36px; cursor: pointer;
+  }
+  .auto-btn[aria-pressed="true"] { border-style: solid; border-color: var(--mango); background: rgba(255,176,0,.18); }
+  .auto-btn:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+  .auto-text { font-size: .82rem; line-height: 1.35; color: var(--on-bg-muted); }
+  @media (max-width: 700px) {
+    .auto-row { flex-direction: row; align-items: center; flex-wrap: wrap; margin-top: -4px; }
+  }
+  @media (pointer: coarse) { .auto-btn { min-height: 44px; } }
+
   /* ---------- Bulk photos ---------- */
   .bulk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; }
   .bulk-tip { color: var(--on-bg-muted); font-size: .9rem; max-width: 60ch; }
@@ -915,6 +930,10 @@
     <div class="controls">
       <p class="group-label" id="mealsLabel"><span class="step" aria-hidden="true">1</span>Time of day</p>
       <div class="meals" id="meals" role="group" aria-labelledby="mealsLabel"></div>
+      <div class="auto-row" id="autoRow">
+        <button class="auto-btn" id="autoBtn" type="button" aria-pressed="true" aria-describedby="autoText">🕒 Auto: on</button>
+        <span class="auto-text" id="autoText"></span>
+      </div>
 
       <p class="group-label" id="modesLabel"><span class="step" aria-hidden="true">2</span>How are you eating?</p>
       <div class="meals" id="modes" role="group" aria-labelledby="modesLabel"></div>
@@ -2179,6 +2198,7 @@ function applySource() {
   jbCatsEl.hidden = !jb;
   document.getElementById("mealsLabel").hidden = !!jb;
   mealsEl.hidden = !!jb;
+  autoRow.hidden = !!jb;
   document.getElementById("editor").hidden = !!jb;
   markPressed(placesEl, place);
   if (r && catsBuiltFor !== r.key) {
@@ -2241,14 +2261,18 @@ let spinning = false;
 const history = [];
 
 // Default to the meal that matches the current hour
-(function pickMealByClock() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 10) meal = "breakfast";
-  else if (h >= 10 && h < 14) meal = "lunch";
-  else if (h >= 14 && h < 17) meal = "snacks";
-  else if (h >= 17 && h < 22) meal = "dinner";
-  else meal = "snacks";
-})();
+// ---------- Pick the time of day from the clock ----------
+// Breakfast 5:00–10:59, lunch 11:00–14:59, merienda 15:00–17:29, dinner 17:30–21:59, late-night snack after that
+function mealForTime(d = new Date()) {
+  const m = d.getHours() * 60 + d.getMinutes();
+  if (m >= 300 && m < 660) return "breakfast";
+  if (m >= 660 && m < 900) return "lunch";
+  if (m >= 900 && m < 1050) return "snacks";
+  if (m >= 1050 && m < 1320) return "dinner";
+  return "snacks";
+}
+let autoMeal = true;   // follows the clock until the person picks a time of day themselves
+meal = mealForTime();
 
 MEALS.forEach(m => {
   const b = document.createElement("button");
@@ -2256,9 +2280,59 @@ MEALS.forEach(m => {
   b.className = "meal";
   b.dataset.key = m.key;
   b.innerHTML = `<span aria-hidden="true">${m.icon}</span>${m.label}`;
-  b.addEventListener("click", () => selectMeal(m.key));
+  b.addEventListener("click", () => {
+    if (spinning) return;
+    autoMeal = false;
+    selectMeal(m.key);
+    updateAutoUI();
+  });
   mealsEl.appendChild(b);
 });
+
+const autoRow = document.getElementById("autoRow");
+const autoBtn = document.getElementById("autoBtn");
+const autoText = document.getElementById("autoText");
+function clockText(d = new Date()) {
+  return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+function updateAutoUI() {
+  autoBtn.setAttribute("aria-pressed", String(autoMeal));
+  if (autoMeal) {
+    autoBtn.textContent = "🕒 Auto: on";
+    autoText.textContent = `It's ${clockText()}, so ${MEALS.find(x => x.key === meal).label.toLowerCase()} is picked for you.`;
+  } else {
+    autoBtn.textContent = "🕒 Use the clock";
+    autoText.textContent = "You picked this one. Tap to go back to the time of day.";
+  }
+}
+// Switch to the right time of day, quietly when a restaurant menu is on the wheel
+function applyClockMeal(announce) {
+  const want = mealForTime();
+  if (want === meal) return;
+  if (restKey()) {
+    meal = want;
+    editorKey = want;
+    mealsEl.querySelectorAll(".meal").forEach(b => b.setAttribute("aria-pressed", b.dataset.key === want ? "true" : "false"));
+  } else {
+    selectMeal(want);
+  }
+  if (announce) showToast(`🕒 It's ${MEALS.find(x => x.key === want).label.toLowerCase()} time, so the wheel switched over`);
+}
+autoBtn.addEventListener("click", () => {
+  if (spinning) return;
+  autoMeal = !autoMeal;
+  if (autoMeal) applyClockMeal(false);
+  updateAutoUI();
+});
+// Keep checking while the app is open, and when coming back to it
+function checkClock() {
+  if (!autoMeal || spinning) { if (autoMeal) updateAutoUI(); return; }
+  const busy = (typeof resultPop !== "undefined" && resultPop.open) || (typeof cartPop !== "undefined" && cartPop.open);
+  if (!busy) applyClockMeal(true);
+  updateAutoUI();
+}
+setInterval(checkClock, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkClock(); });
 
 function selectMeal(key) {
   if (spinning) return;
@@ -4161,6 +4235,7 @@ selectMode(mode);
 applySource();
 resize();
 applyGameStyle();
+updateAutoUI();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
 </script>
 </body>
