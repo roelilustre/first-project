@@ -189,7 +189,7 @@
   }
   .controls { grid-area: controls; }
   .wheel-col { grid-area: wheel; }
-  .result-col { grid-area: result; align-self: center; }
+  .result-col { grid-area: result; align-self: start; }
   .menu-col { grid-area: menu; }
   /* Dishes, drinks and desserts side by side under the wheel */
   .ring-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; }
@@ -787,6 +787,67 @@
   }
   .bulk-item.unmatched select { border-color: var(--chili); }
 
+  /* ---------- Cart panel beside the wheel ---------- */
+  .cart-panel {
+    background: var(--panel); color: #13205A;
+    border: 2px solid #0B154A; border-radius: 20px; box-shadow: var(--shadow);
+    padding: 16px 16px 14px; margin-bottom: 22px;
+  }
+  .cp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .cp-head h2 { margin: 0; font: 400 1.6rem "Bangers", "Arial Black", sans-serif; letter-spacing: .04em; color: var(--chili); }
+  .cp-count { font-weight: 800; font-size: .9rem; color: var(--muted); }
+  .cp-add { display: flex; gap: 8px; margin-bottom: 12px; }
+  .cp-add select {
+    flex: 1; min-width: 0; min-height: 44px;
+    font: 600 .95rem "Nunito", system-ui, sans-serif; color: #13205A;
+    background: var(--field); border: 2px solid #13205A; border-radius: 12px; padding: 6px 10px;
+  }
+  .cp-add select:focus-visible { outline: 3px solid var(--mango); outline-offset: 1px; }
+  .cp-add .btn { flex: none; min-height: 44px; padding: 8px 16px; }
+  .cp-table-wrap { max-height: 380px; overflow: auto; border-radius: 12px; }
+  .cp-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  .cp-table thead th {
+    position: sticky; top: 0; z-index: 1; background: #13205A; color: #FFFFFF;
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; text-align: left; padding: 8px 10px;
+  }
+  .cp-table thead tr { background: #13205A; }
+  .cp-table thead th:nth-child(2), .cp-table thead th:nth-child(3) { text-align: center; }
+  .cp-table thead th:last-child { text-align: right; }
+  .cp-table th.cp-group {
+    text-align: left; background: #FFF4D6; color: #13205A; font-size: .9rem; padding: 7px 10px;
+    border-top: 2px solid #13205A;
+  }
+  .cp-table th.cp-group span { float: right; font-weight: 800; }
+  .cp-table td { padding: 7px 10px; border-bottom: 1px dashed rgba(19,32,90,.18); vertical-align: middle; }
+  .cp-item { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .cp-item .thumb { width: 36px; height: 36px; border-radius: 8px; border-width: 2px; flex: none; }
+  .cp-name { font-weight: 800; line-height: 1.2; display: block; }
+  .cp-kind { font-size: .78rem; color: var(--muted); }
+  .cp-qty { white-space: nowrap; text-align: center; }
+  .cp-qty button {
+    width: 30px; height: 30px; border-radius: 50%; border: 2px solid #13205A; background: #FFFFFF; color: #13205A;
+    font: 800 1rem/1 "Nunito", system-ui, sans-serif; cursor: pointer; vertical-align: middle;
+  }
+  .cp-qty button:focus-visible, .cp-del:focus-visible { outline: 3px solid var(--mango); outline-offset: 1px; }
+  .cp-qty output { display: inline-block; min-width: 24px; font-weight: 800; text-align: center; }
+  .cp-price { text-align: right; white-space: nowrap; font-weight: 700; }
+  .cp-price small { font-weight: 600; color: var(--muted); }
+  .cp-del { background: none; border: 0; cursor: pointer; font-size: 1rem; color: var(--chili); width: 32px; height: 32px; border-radius: 8px; }
+  .cp-table tfoot td { border: 0; border-top: 2px solid #13205A; font-weight: 800; font-size: 1rem; padding-top: 10px; }
+  .cp-empty { margin: 4px 0 2px; color: var(--muted); font-size: .92rem; }
+  .cp-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .cp-actions .cart-add { flex: 1; }
+  @media (pointer: coarse) { .cp-qty button, .cp-del { width: 40px; height: 40px; } }
+  @media (max-width: 480px) {
+    .cp-table th:nth-child(3), .cp-table td:nth-child(3) { display: none; }  /* minus at 1 removes the item */
+    .cp-item .thumb { display: none; }
+    .cp-table td { padding: 7px 4px; }
+    .cp-qty button { width: 34px; height: 34px; }
+    .cp-qty output { min-width: 18px; }
+  }
+  .cart-fab.panel-visible { opacity: 0; pointer-events: none; transform: translateY(20px); }
+  .cart-fab { transition: opacity .2s ease, transform .2s ease; }
+
   /* ---------- Cart ---------- */
   .cart-add { background: var(--chili); color: #FFFFFF; }
   .cart-add:disabled { background: #2E8B57; color: #FFFFFF; opacity: 1; cursor: default; }
@@ -999,6 +1060,22 @@
           <button class="btn again-btn" id="againBtn" type="button" hidden>🎡 Spin again</button>
         </div>
       </div>
+      <section class="cart-panel" aria-labelledby="cartPanelTitle">
+        <div class="cp-head">
+          <h2 id="cartPanelTitle">🛒 Your cart</h2>
+          <span class="cp-count" id="cpCount">0 items</span>
+        </div>
+        <div class="cp-add">
+          <label for="cpPicker" class="visually-hidden">Choose an item to add</label>
+          <select id="cpPicker"></select>
+          <button class="btn" id="cpAddBtn" type="button">➕ Add</button>
+        </div>
+        <div class="cp-table-wrap" id="cpTableWrap"></div>
+        <div class="cp-actions" id="cpActions" hidden>
+          <button class="btn cart-add" id="cpReady" type="button">✅ Ready to order</button>
+          <button class="btn quiet" id="cpClear" type="button">Clear</button>
+        </div>
+      </section>
       <div class="history" id="history" hidden>
         Picked so far
         <ul id="historyList"></ul>
@@ -3188,6 +3265,7 @@ function updateCartFab(bump) {
   cartFab.hidden = n === 0;
   cartFab.setAttribute("aria-label", `Open cart, ${n} item${n === 1 ? "" : "s"}`);
   if (bump && !reduceMotion) { cartFab.classList.remove("bump"); void cartFab.offsetWidth; cartFab.classList.add("bump"); }
+  renderCartPanel();
   // Keep the restaurant links in the details panel in step with the cart
   if (planItem && !recipeEl.hidden) showJollibeePlan(planItem);
 }
@@ -3454,7 +3532,137 @@ function renderSummary() {
   actionButton("← Back to cart", "quiet", renderCart);
 }
 
+// ---------- Cart table beside the wheel ----------
+const cpPicker = document.getElementById("cpPicker");
+const cpTableWrap = document.getElementById("cpTableWrap");
+let pickerCands = [];
+
+// Every item from every menu, grouped for the "add any item" dropdown
+function buildPicker() {
+  const keep = cpPicker.value;
+  pickerCands = [];
+  cpPicker.innerHTML = "";
+  const first = document.createElement("option");
+  first.value = ""; first.textContent = "➕ Add any item…";
+  cpPicker.appendChild(first);
+  const group = (label, entries) => {
+    if (!entries.length) return;
+    const og = document.createElement("optgroup");
+    og.label = label;
+    entries.forEach(e => {
+      const o = document.createElement("option");
+      o.value = String(pickerCands.length);
+      o.textContent = `${KIND_ICON[e.kind]} ${e.item.name}`;
+      og.appendChild(o);
+      pickerCands.push(e);
+    });
+    cpPicker.appendChild(og);
+  };
+  MEALS.forEach(m => group(`${m.icon} ${m.label} (home)`, DATA[m.key].map(item => ({ item, kind: "dish", home: true }))));
+  group("🥤 Drinks (home)", DATA.drinks.map(item => ({ item: Object.assign(item, { ring: "drink" }), kind: "drink", home: true })));
+  group("🍮 Desserts (home)", DATA.desserts.map(item => ({ item: Object.assign(item, { ring: "dessert" }), kind: "dessert", home: true })));
+  Object.values(RESTAURANTS).forEach(r => group(`${r.icon} ${r.name}`, [
+    ...r.all.map(item => ({ item, kind: "dish" })),
+    ...r.drinks.map(item => ({ item: Object.assign({}, item, { rest: r.key }), kind: "drink" })),
+    ...r.desserts.map(item => ({ item, kind: "dessert" }))
+  ]));
+  if (keep && pickerCands[Number(keep)]) cpPicker.value = keep;
+}
+
+document.getElementById("cpAddBtn").addEventListener("click", () => {
+  const e = pickerCands[Number(cpPicker.value)];
+  if (!cpPicker.value || !e) { cpPicker.focus(); showToast("Choose an item from the list first"); return; }
+  // Home items follow how you're eating right now; restaurant items go under their restaurant
+  const how = ["cook", "eatout", "order"].includes(mode) ? mode : "cook";
+  addToCart([{ item: e.item, kind: e.kind, place: e.home ? how : placeFor(e.item, how) }]);
+  cpPicker.value = "";
+});
+document.getElementById("cpReady").addEventListener("click", () => { openCart(); renderSummary(); });
+document.getElementById("cpClear").addEventListener("click", () => { openCart(); renderClearConfirm(); });
+
+function changeQty(line, delta) {
+  line.qty += delta;
+  if (line.qty <= 0) cart = cart.filter(x => x !== line);
+  saveCart();
+  updateCartFab();
+  if (cartPop.open) renderCart();
+}
+
+function renderCartPanel() {
+  const n = cartQty();
+  document.getElementById("cpCount").textContent = `${n} item${n === 1 ? "" : "s"}`;
+  document.getElementById("cpActions").hidden = n === 0;
+  cpTableWrap.innerHTML = "";
+  if (!n) {
+    const p = document.createElement("p");
+    p.className = "cp-empty";
+    p.textContent = "Nothing here yet. Spin and tap Add to cart, tap 🛒 on any item in the lists, or pick one above.";
+    cpTableWrap.appendChild(p);
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "cp-table";
+  table.innerHTML = '<caption class="visually-hidden">Items in your cart</caption><thead><tr><th scope="col">Item</th><th scope="col">Qty</th><th scope="col"><span class="visually-hidden">Remove</span></th><th scope="col">Price</th></tr></thead>';
+  const groups = groupedCart();
+  groups.forEach(g => {
+    const tb = document.createElement("tbody");
+    const gr = document.createElement("tr");
+    const gh = document.createElement("th");
+    gh.className = "cp-group"; gh.colSpan = 4; gh.scope = "rowgroup";
+    gh.textContent = g.label;
+    if (g.hasPrices) { const sp = document.createElement("span"); sp.textContent = formatPHP(g.subtotal); gh.appendChild(sp); }
+    gr.appendChild(gh);
+    tb.appendChild(gr);
+    g.lines.forEach(l => {
+      const tr = document.createElement("tr");
+      const c1 = document.createElement("td");
+      const wrap = document.createElement("div"); wrap.className = "cp-item";
+      const t = document.createElement("span"); t.className = "thumb";
+      t.innerHTML = thumbHTML({ name: l.name, rest: l.rest, ring: l.ring || (l.kind === "drink" ? "drink" : l.kind === "dessert" ? "dessert" : undefined) }, !!l.rest, 0);
+      const txt = document.createElement("span");
+      const nm = document.createElement("span"); nm.className = "cp-name"; nm.textContent = l.name;
+      const kd = document.createElement("span"); kd.className = "cp-kind"; kd.textContent = `${KIND_ICON[l.kind]} ${l.kind}`;
+      txt.append(nm, kd); wrap.append(t, txt); c1.appendChild(wrap);
+      const c2 = document.createElement("td"); c2.className = "cp-qty";
+      const minus = document.createElement("button"); minus.type = "button"; minus.textContent = "−";
+      minus.setAttribute("aria-label", `One less ${l.name}`);
+      const out = document.createElement("output"); out.textContent = l.qty;
+      const plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+";
+      plus.setAttribute("aria-label", `One more ${l.name}`);
+      minus.addEventListener("click", () => changeQty(l, -1));
+      plus.addEventListener("click", () => changeQty(l, 1));
+      c2.append(minus, out, plus);
+      const c3 = document.createElement("td");
+      const del = document.createElement("button"); del.type = "button"; del.className = "cp-del"; del.textContent = "✕";
+      del.title = "Remove"; del.setAttribute("aria-label", `Remove ${l.name}`);
+      del.addEventListener("click", () => changeQty(l, -l.qty));
+      c3.appendChild(del);
+      const c4 = document.createElement("td"); c4.className = "cp-price";
+      if (l.price !== null) c4.textContent = formatPHP(l.price * l.qty);
+      else { const sm = document.createElement("small"); sm.textContent = l.rest ? "at counter" : "—"; c4.appendChild(sm); }
+      tr.append(c1, c2, c3, c4);
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+  });
+  const total = groups.reduce((a, g) => a + g.subtotal, 0);
+  if (total > 0) {
+    const tf = document.createElement("tfoot");
+    tf.innerHTML = '<tr><td colspan="3">Total</td><td class="cp-price"></td></tr>';
+    tf.querySelector(".cp-price").textContent = formatPHP(total);
+    table.appendChild(tf);
+  }
+  cpTableWrap.appendChild(table);
+}
+
+buildPicker();
 updateCartFab();
+// Hide the floating cart button while the cart table itself is on screen
+if ("IntersectionObserver" in window) {
+  new IntersectionObserver(entries => {
+    entries.forEach(en => cartFab.classList.toggle("panel-visible", en.isIntersecting));
+  }, { threshold: 0.25 }).observe(document.querySelector(".cart-panel"));
+}
 
 
 // ---------- Bulk photos: match many photos to items by file name ----------
@@ -4056,6 +4264,7 @@ function setStatus(msg, isError) {
 }
 
 function renderList() {
+  if (typeof buildPicker === "function" && pickerCands) buildPicker();
   const key = editorKey;
   const m = listInfo(key);
   const items = DATA[key];
