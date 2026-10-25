@@ -137,6 +137,8 @@
   .plan-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
   a.btn { text-decoration: none; display: inline-block; }
   .plan p { margin: 0 0 14px; max-width: 62ch; }
+  .plan-links .plan-actions + .plan-actions { margin-top: 10px; }
+  .plan p.plan-links-label { margin: 16px 0 8px; font-weight: 800; font-size: .85rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
   .price {
     display: inline-block;
     margin: 12px 0 0;
@@ -608,6 +610,234 @@
   .result-col > .result { display: none; }
   .result-col .history { margin-top: 0; }
 
+  /* ---------- Game style switch ---------- */
+  .game-switch {
+    display: flex; width: fit-content; margin: 0 auto 18px;
+    background: #0B154A; border: 2px solid #FFFFFF; border-radius: 999px; padding: 4px; gap: 4px;
+  }
+  .gs-btn {
+    font: 800 .95rem "Nunito", system-ui, sans-serif;
+    border: 0; border-radius: 999px; padding: 8px 16px; min-height: 40px;
+    background: transparent; color: #FFFFFF; cursor: pointer;
+  }
+  .gs-btn[aria-checked="true"] { background: var(--mango); color: #13205A; }
+  .gs-btn:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+  .gs-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* ---------- Slot machine ---------- */
+  .slot-wrap { position: relative; width: min(540px, 100%); margin: 0 auto; padding-right: 34px; }
+  .slot-machine {
+    position: relative;
+    background: linear-gradient(180deg, #F2362C 0%, #E2231A 45%, #B3140E 100%);
+    border: 3px solid #0B154A;
+    border-radius: 28px 28px 18px 18px;
+    box-shadow: 0 0 0 5px var(--mango), 0 10px 0 5px #0B154A;
+    padding: 0 16px 18px;
+  }
+  .slot-marquee {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin: 0 -16px 14px; padding: 12px 10px 10px;
+    background: #13205A; border-radius: 25px 25px 0 0; border-bottom: 3px solid var(--mango);
+  }
+  .slot-title {
+    font: 400 clamp(1.4rem, 4vw, 2rem) "Bangers", "Arial Black", sans-serif; letter-spacing: .05em;
+    background: linear-gradient(180deg, #FFE45C, #FFB000 55%, #F2611B);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(2px 2px 0 #050A26);
+  }
+  .bulbs {
+    flex: 1; max-width: 120px; height: 12px;
+    background: radial-gradient(circle, #FFE45C 0 3.5px, transparent 4px) 0 50% / 16px 12px repeat-x;
+    animation: chase 1.2s steps(2) infinite;
+  }
+  .slot-wrap.running .bulbs { animation-duration: .3s; }
+  @keyframes chase { 50% { filter: brightness(.45); } }
+  .slot-window {
+    position: relative;
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+    background: #0B154A; border: 3px solid #0B154A; border-radius: 16px; padding: 8px;
+  }
+  .reel-col { min-width: 0; text-align: center; }
+  .reel-label {
+    display: block; margin-bottom: 6px;
+    font: 400 1.05rem "Bangers", "Arial Black", sans-serif; letter-spacing: .06em; color: var(--mango);
+  }
+  .reel {
+    --cell: 96px;
+    position: relative; height: calc(var(--cell) * 3); overflow: hidden;
+    background: #FFFFFF; border-radius: 10px;
+  }
+  /* Soft shading at the top and bottom of each reel, like a curved drum */
+  .reel::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(11,21,74,.55) 0%, rgba(11,21,74,0) 30%, rgba(11,21,74,0) 70%, rgba(11,21,74,.55) 100%);
+  }
+  .strip { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+  .cell {
+    height: var(--cell); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    padding: 4px 6px; border-bottom: 1px dashed rgba(19,32,90,.18); color: #13205A;
+  }
+  .cell .thumb { width: 52px; height: 52px; border-radius: 10px; }
+  .cell .cell-name {
+    font-weight: 800; font-size: .8rem; line-height: 1.1; max-width: 100%;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .reel.blur .strip { filter: blur(1.4px); }
+  /* After landing: dim the rows above and below, and light up the payline */
+  .reel.won::after {
+    background: linear-gradient(180deg, rgba(11,21,74,.62) 0%, rgba(11,21,74,.5) 33.3%, transparent 33.4%, transparent 66.6%, rgba(11,21,74,.5) 66.7%, rgba(11,21,74,.62) 100%);
+  }
+  .slot-window.landed .payline {
+    border-width: 4px; border-color: #FFE45C;
+    background: rgba(255,228,92,.14);
+    box-shadow: 0 0 18px 2px rgba(255,228,92,.75);
+    animation: paylineGlow 1s ease-in-out 3;
+  }
+  @keyframes paylineGlow { 50% { box-shadow: 0 0 28px 6px rgba(255,228,92,.95); } }
+  .payline {
+    position: absolute; left: 0; right: 0; pointer-events: none;
+    border-top: 3px solid var(--mango); border-bottom: 3px solid var(--mango);
+  }
+  .payline::before, .payline::after {
+    content: ""; position: absolute; top: 50%; transform: translateY(-50%);
+    border: 10px solid transparent;
+  }
+  .payline::before { left: -3px; border-left: 14px solid var(--mango); }
+  .payline::after { right: -3px; border-right: 14px solid var(--mango); }
+  .slot-window .confetti { inset: -10%; width: 120%; height: 120%; }
+  .slot-spin {
+    display: block; width: 100%; margin-top: 16px; min-height: 56px;
+    font: 400 1.8rem "Bangers", "Arial Black", sans-serif; letter-spacing: .06em;
+    color: #13205A; text-shadow: 1px 1px 0 #FFFFFF;
+    background: linear-gradient(180deg, #FFE45C, #FFB000 60%, #F7931E);
+    border: 3px solid #0B154A; border-radius: 16px; box-shadow: 0 5px 0 #0B154A; cursor: pointer;
+    animation: breathe 1.8s ease-in-out infinite;
+  }
+  .slot-spin:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #0B154A; }
+  .slot-spin:disabled { animation: none; filter: saturate(.6); cursor: wait; }
+  .slot-spin:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; }
+  .lever {
+    position: absolute; right: 0; top: 70px; width: 34px; height: 170px;
+    background: none; border: 0; padding: 0; cursor: pointer;
+    transform-origin: 50% 100%;
+  }
+  .lever-stick {
+    position: absolute; left: 50%; bottom: 0; width: 10px; height: 140px; margin-left: -5px;
+    background: linear-gradient(90deg, #C9D5FF, #FFFFFF, #8EA0D8); border: 2px solid #0B154A; border-radius: 6px;
+    transform-origin: 50% 100%; transition: transform .25s ease;
+  }
+  .lever-ball {
+    position: absolute; left: 50%; top: 0; width: 32px; height: 32px; margin-left: -16px;
+    background: radial-gradient(circle at 35% 30%, #FF7A6E, #E2231A 60%, #9E120C);
+    border: 2px solid #0B154A; border-radius: 50%; transition: transform .25s ease;
+  }
+  .lever.pulled .lever-stick { transform: scaleY(-.55); }
+  .lever.pulled .lever-ball { transform: translateY(196px); }
+  .lever:focus-visible { outline: 3px solid var(--mango); outline-offset: 4px; border-radius: 8px; }
+  .lever:disabled { cursor: wait; }
+  @media (max-width: 700px) {
+    .reel { --cell: 78px; }
+    .cell .thumb { width: 40px; height: 40px; }
+    .cell .cell-name { font-size: .72rem; }
+    .slot-machine { padding: 0 10px 14px; }
+    .slot-marquee { margin: 0 -10px 10px; }
+    .lever { top: 60px; height: 140px; }
+    .lever-stick { height: 112px; }
+    .lever.pulled .lever-ball { transform: translateY(160px); }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .reel { --cell: 62px; }
+    .cell .thumb { width: 32px; height: 32px; }
+    .slot-marquee { padding: 6px; margin-bottom: 8px; }
+    .slot-spin { min-height: 44px; font-size: 1.4rem; margin-top: 10px; }
+    .slot-wrap { width: min(440px, 100%); }
+  }
+  @media (prefers-reduced-motion: reduce) { .bulbs, .slot-spin, .slot-window.landed .payline { animation: none; } .lever-stick, .lever-ball { transition: none; } }
+
+  /* ---------- Bulk photos ---------- */
+  .bulk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; }
+  .bulk-tip { color: var(--on-bg-muted); font-size: .9rem; max-width: 60ch; }
+  .bulk-tip em { color: var(--on-bg); font-style: normal; font-weight: 700; }
+  .bulk-summary { margin: 0 0 12px; font-weight: 700; }
+  .bulk-list { list-style: none; margin: 0; padding: 0; }
+  .bulk-item {
+    display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 4px 12px; align-items: center;
+    padding: 10px 0; border-bottom: 2px dashed rgba(19,32,90,.15);
+  }
+  .bulk-item img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; border: 2px solid #13205A; grid-row: span 2; }
+  .bulk-file { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+  .bulk-item select {
+    font: 600 .95rem "Nunito", system-ui, sans-serif; color: #13205A;
+    background: var(--field); border: 2px solid #13205A; border-radius: 10px; padding: 6px 8px; width: 100%; min-height: 40px;
+  }
+  .bulk-item.unmatched select { border-color: var(--chili); }
+
+  /* ---------- Cart ---------- */
+  .cart-add { background: var(--chili); color: #FFFFFF; }
+  .cart-add:disabled { background: #2E8B57; color: #FFFFFF; opacity: 1; cursor: default; }
+  .cart-fab {
+    position: fixed; z-index: 50;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 54px; padding: 0 18px 0 16px;
+    font: 800 1.05rem "Nunito", system-ui, sans-serif;
+    color: #13205A; background: var(--mango);
+    border: 3px solid #0B154A; border-radius: 999px;
+    box-shadow: 0 5px 0 #0B154A, 0 10px 24px rgba(0,0,0,.35);
+    cursor: pointer;
+  }
+  .cart-fab:focus-visible { outline: 3px solid #FFFFFF; outline-offset: 3px; }
+  .cart-fab.bump { animation: landpop .5s cubic-bezier(.2,1.8,.4,1); }
+  .cart-count {
+    display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 6px;
+    background: var(--chili); color: #FFFFFF; border-radius: 999px; font-size: .95rem;
+  }
+  .toast {
+    position: fixed; z-index: 60; left: 50%; transform: translateX(-50%);
+    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    background: #13205A; color: #FFFFFF; font-weight: 700;
+    padding: 10px 18px; border-radius: 999px; border: 2px solid var(--mango);
+    box-shadow: 0 8px 20px rgba(0,0,0,.35); max-width: calc(100% - 32px); text-align: center;
+  }
+  .cart-group { margin: 0 0 18px; }
+  .cart-group h3 { margin: 0 0 8px; font-size: 1.05rem; display: flex; justify-content: space-between; gap: 10px; }
+  .cart-group h3 small { font-weight: 700; color: var(--muted); }
+  .cart-lines { list-style: none; margin: 0; padding: 0; }
+  .cart-line {
+    display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    padding: 8px 0; border-bottom: 2px dashed rgba(19,32,90,.15);
+  }
+  .cart-line .thumb { width: 44px; height: 44px; border-radius: 10px; }
+  .cl-name { display: block; font-weight: 800; line-height: 1.2; }
+  .cl-meta { display: block; font-size: .85rem; color: var(--muted); }
+  .qty { display: inline-flex; align-items: center; gap: 4px; }
+  .qty button {
+    width: 36px; height: 36px; border-radius: 50%; border: 2px solid #13205A; background: #FFFFFF;
+    font: 800 1.1rem "Nunito", system-ui, sans-serif; color: #13205A; cursor: pointer;
+  }
+  .qty button:focus-visible { outline: 3px solid var(--mango); outline-offset: 1px; }
+  .qty output { min-width: 22px; text-align: center; font-weight: 800; }
+  .cart-total { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; padding-top: 6px; }
+  .cart-note { font-size: .88rem; color: var(--muted); margin: 6px 0 0; }
+  .cart-empty { text-align: center; padding: 10px 0 4px; }
+  .summary-sheet { background: #FFF8E6; border: 2px dashed #13205A; border-radius: 14px; padding: 14px 16px; }
+  .summary-sheet h3 { margin: 0 0 4px; font-size: 1rem; }
+  .summary-sheet ul { margin: 0 0 12px; padding-left: 0; list-style: none; }
+  .summary-sheet li { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .summary-sheet li span:last-child { white-space: nowrap; text-align: right; }
+  .summary-sheet .sub span:last-child { text-align: right; }
+  .summary-sheet .sub { gap: 12px; }
+  .summary-sheet .sub { display: flex; justify-content: space-between; font-weight: 800; border-top: 1px solid rgba(19,32,90,.2); padding-top: 4px; margin-bottom: 14px; }
+  .summary-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .summary-links a { font-size: .9rem; padding: 7px 14px; }
+  .cart-mini {
+    flex: none; min-width: 44px; min-height: 44px;
+    background: none; border: 0; border-radius: 8px; cursor: pointer; font-size: 1.05rem;
+  }
+  .cart-mini:focus-visible { outline: 3px solid var(--chili); outline-offset: 2px; }
+  @media (max-width: 520px) { .cart-fab-label { display: none; } }
+
   /* Result pop-up after each spin */
   .result-pop {
     width: min(520px, calc(100% - 28px));
@@ -697,6 +927,28 @@
     </div>
 
     <div class="wheel-col">
+      <div class="game-switch" role="radiogroup" aria-label="Game style">
+        <button type="button" class="gs-btn" role="radio" data-game="wheel" aria-checked="true">🎡 Wheel</button>
+        <button type="button" class="gs-btn" role="radio" data-game="slots" aria-checked="false">🎰 Slot machine</button>
+      </div>
+      <div class="slot-wrap" id="slotWrap" hidden>
+        <div class="slot-machine">
+          <div class="slot-marquee">
+            <span class="bulbs" aria-hidden="true"></span>
+            <span class="slot-title">Bakbak Slots</span>
+            <span class="bulbs" aria-hidden="true"></span>
+          </div>
+          <div class="slot-window">
+            <div class="reel-col"><span class="reel-label">Dish</span><div class="reel" id="reel0"><div class="strip"></div></div></div>
+            <div class="reel-col"><span class="reel-label">Drink</span><div class="reel" id="reel1"><div class="strip"></div></div></div>
+            <div class="reel-col"><span class="reel-label">Dessert</span><div class="reel" id="reel2"><div class="strip"></div></div></div>
+            <div class="payline" aria-hidden="true"></div>
+            <canvas class="confetti" id="slotConfetti" aria-hidden="true"></canvas>
+          </div>
+          <button class="slot-spin" id="slotSpin" type="button">SPIN!</button>
+        </div>
+        <button class="lever" id="lever" type="button" aria-label="Pull the lever to spin"><span class="lever-stick"></span><span class="lever-ball"></span></button>
+      </div>
       <div class="wheel-wrap">
         <div class="pointer" aria-hidden="true"></div>
         <canvas id="wheel" role="img" aria-label="Food roulette wheel"></canvas>
@@ -704,7 +956,7 @@
         <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
         <button class="spin" id="spin" type="button" aria-label="Spin the wheel"><span class="spin-label" id="spinLabel">SPIN!</span></button>
       </div>
-      <p class="step-hint"><span class="step" aria-hidden="true">3</span>Tap <strong>SPIN!</strong> for a dish, a drink and a dessert</p>
+      <p class="step-hint"><span class="step" aria-hidden="true">3</span><span id="stepHintText">Tap <strong>SPIN!</strong> for a dish, a drink and a dessert</span></p>
       <ul class="ring-legend" aria-label="What each ring holds">
         <li><span class="ring-dot dish" aria-hidden="true"></span>Dish <small>inner</small></li>
         <li><span class="ring-dot drink" aria-hidden="true"></span>Drink <small>middle</small></li>
@@ -737,6 +989,11 @@
     <div class="menu-col">
       <h2 class="col-title" id="menuTitle">On the wheel</h2>
       <p class="note menu-hint">The wheel has three rings that spin in opposite directions. Tap an item to see more, or use 📷 to swap the drawing for your own photo.</p>
+      <div class="bulk-row">
+        <button class="btn" id="bulkPhotos" type="button">📷 Add photos in bulk</button>
+        <span class="bulk-tip">Name each photo after the item (for example <em>chicken-adobo.jpg</em> or <em>big-mac.png</em>) and they'll match up on their own.</span>
+      </div>
+      <input type="file" id="bulkInput" accept="image/*" multiple class="visually-hidden" tabindex="-1" aria-hidden="true">
       <div class="ring-grid">
         <div class="ring-section">
           <h3 class="ring-title"><span class="ring-dot dish" aria-hidden="true"></span>Dishes <span class="ring-where">inner ring</span></h3>
@@ -812,9 +1069,30 @@
   <button class="pop-close" id="popClose" type="button" aria-label="Close">✕</button>
   <div class="pop-body" id="popBody"></div>
   <div class="pop-actions">
-    <button class="btn" id="popAgain" type="button">🎡 Spin again</button>
+    <button class="btn cart-add" id="popAddCart" type="button">🛒 Add to cart</button>
+    <button class="btn quiet" id="popAgain" type="button">🎡 Spin again</button>
     <button class="btn quiet" id="popDetails" type="button">See details</button>
   </div>
+</dialog>
+
+<dialog class="result-pop bulk-pop" id="bulkPop" aria-labelledby="bulkTitle">
+  <div class="pop-ribbon"><span id="bulkTitle">📷 Match your photos</span></div>
+  <button class="pop-close" id="bulkClose" type="button" aria-label="Close">✕</button>
+  <div class="pop-body" id="bulkBody"></div>
+  <div class="pop-actions">
+    <button class="btn cart-add" id="bulkSave" type="button">Save photos</button>
+    <button class="btn quiet" id="bulkCancel" type="button">Cancel</button>
+  </div>
+</dialog>
+
+<button class="cart-fab" id="cartFab" type="button" hidden aria-label="Open cart">🛒 <span class="cart-fab-label">Cart</span> <span class="cart-count" id="cartCount">0</span></button>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<dialog class="result-pop cart-pop" id="cartPop" aria-labelledby="cartTitle">
+  <div class="pop-ribbon"><span id="cartTitle">🛒 Your cart</span></div>
+  <button class="pop-close" id="cartClose" type="button" aria-label="Close">✕</button>
+  <div class="pop-body" id="cartBody"></div>
+  <div class="pop-actions" id="cartActions"></div>
 </dialog>
 
 <script>
@@ -970,6 +1248,40 @@ function foodArt(kindSpec, bg) {
 function artKind(item) {
   const n = item.name.toLowerCase();
   const has = (...w) => w.some(x => n.includes(x));
+  // KFC items
+  if (has("feast")) return "bucket";
+  if (has("box")) return "chicken-plate";
+  if (has("twister")) return "lumpia";
+  if (has("wicked wings", "wings")) return "grilled-chicken";
+  if (has("popcorn chicken")) return "chicharon";
+  if (has("original recipe chicken", "original tender")) return "fried-chicken";
+  if (n === "chips") return "fries";
+  if (has("potato & gravy", "gravy")) return "adobo";
+  if (has("coleslaw", "slaw")) return "buko-pandan";
+  if (has("dinner roll")) return "bread";
+  if (has("supercharged")) return "kare-kare";
+  if (has("mousse")) return "sundae";
+  if (has("mountain dew")) return "cold-drink:#B5E04A::#7A9E3A";
+  // Hungry Jack's items
+  if (has("chicken royale")) return "sandwich";
+  if (has("whopper", "jack's fried chicken", "tendercrisp", "grilled chicken classic", "grilled chicken bacon", "bacon deluxe", "bbq cheeseburger")) return "burger";
+  if (has("thick cut chips", "cheesy bacon chips")) return "fries";
+  if (has("onion ring")) return "chicharon";
+  if (has("storm")) return "sundae";
+  // McDonald's items
+  if (has("iced coffee", "iced latte")) return "cold-drink:#B07A4A::#FFFFFF";
+  if (has("flat white", "latte", "cappuccino", "long black", "espresso")) return "hot-drink:#7A4A22";
+  if (has("frozen coke")) return "cold-drink:#7A2A1E";
+  if (has("frozen fanta", "fanta")) return "cold-drink:#F7931E";
+  if (has("sprite")) return "cold-drink:#D9F2B4::#7A9E3A";
+  if (has("coca-cola", "coke")) return "cold-drink:#5A2A12";
+  if (has("mcflurry", "soft serve", "cone")) return "sundae";
+  if (has("mcnugget", "nugget")) return "chicharon";
+  if (has("hash brown")) return "pie";
+  if (has("hotcake", "pancake")) return "bibingka";
+  if (has("mozzarella")) return "lumpia";
+  if (has("mcmuffin", "muffin", "big mac", "quarter pounder", "mcfeast", "angus", "mcchicken", "mcspicy", "hamburger", "cheeseburger")) return "burger";
+  if (has("filet-o-fish")) return "sandwich";
   // Drinks
   if (has("salabat", "ginger tea")) return "hot-drink:#C9952E";
   if (has("tsokolate", "sikwate", "hot choco")) return "hot-drink:#4A2616";
@@ -1032,7 +1344,7 @@ function artKind(item) {
 
 function photoKey(item, jb) {
   const prefix = item.ring === "drink" ? "drink"
-    : item.rest ? (item.rest === "maxs" ? "maxs" : "jb")
+    : item.rest ? (item.rest === "jollibee" ? "jb" : item.rest)
     : item.ring === "dessert" ? "dessert" : "home";
   return prefix + ":" + item.name.toLowerCase();
 }
@@ -1511,6 +1823,172 @@ function maxsVariantText(v) {
 }
 
 // ---------- Restaurants under "Eat out" ----------
+// ---------- McDonald's Australia menu (from mcdonalds_australia_menu.json) ----------
+// The file has no prices. "Chicken McMcNuggets" in the file is corrected to "Chicken McNuggets".
+const MCD = {
+  country: "Australia", currency: "AUD",
+  categories: [
+    { name: "Beef Burgers", short: "Beef Burgers", items: [
+      { name: "Big Mac", description: "Two 100% Aussie beef patties, iceberg lettuce, cheese, pickles, onions and legendary Big Mac sauce." },
+      { name: "Quarter Pounder", description: "A quarter-pound of 100% Aussie beef, cheese, pickles, onions, mustard and ketchup." },
+      { name: "Double Quarter Pounder", label: "Double QP", description: "Two quarter-pound patties of 100% Aussie beef, cheese, pickles, onions, mustard and ketchup." },
+      { name: "Cheeseburger", description: "100% Aussie beef patty, cheese, pickles, onions, mustard and ketchup." },
+      { name: "Double Cheeseburger", label: "Double Cheese", description: "Two 100% Aussie beef patties, two slices of cheese, pickles, onions, mustard and ketchup." },
+      { name: "Triple Cheeseburger", label: "Triple Cheese", description: "Three 100% Aussie beef patties, three slices of cheese, pickles, onions, mustard and ketchup." },
+      { name: "Hamburger", description: "100% Aussie beef patty, pickles, onions, mustard and ketchup." },
+      { name: "McFeast", description: "Aussie beef patty, cheese, tomato, lettuce, pickles, three sauces." },
+      { name: "Classic Angus", description: "Thick Angus beef patty, cheese, tomato, onions, lettuce, mayo and mustard sauce." },
+      { name: "BBQ Bacon Angus", description: "Thick Angus beef patty, bacon, cheese, crispy onions and BBQ sauce." }
+    ]},
+    { name: "Chicken & Fish", short: "Chicken & Fish", items: [
+      { name: "McChicken", description: "Crispy chicken breast patty, lettuce and mayonnaise." },
+      { name: "Chicken McNuggets (6pc)", label: "6pc McNuggets", description: "Tempura coated chicken pieces served with your choice of dipping sauce." },
+      { name: "Chicken McNuggets (10pc)", label: "10pc McNuggets", description: "Tempura coated chicken pieces served with your choice of dipping sauce." },
+      { name: "Chicken McNuggets (24pc)", label: "24pc McNuggets", description: "Tempura coated chicken pieces served with your choice of dipping sauce." },
+      { name: "Filet-O-Fish", description: "Sustainably sourced fish patty, cheese and tartar sauce." },
+      { name: "McSpicy", description: "Fiery crispy chicken breast patty, lettuce and mayonnaise." },
+      { name: "Chicken Cheese Burger", label: "Chicken Cheese", description: "Crispy chicken patty, cheese and mayonnaise." }
+    ]},
+    { name: "Breakfast (Available until 12pm)", short: "Breakfast", items: [
+      { name: "Egg McMuffin", description: "Egg, bacon, cheese on a toasted English muffin." },
+      { name: "Sausage McMuffin", description: "Sausage patty, cheese on a toasted English muffin." },
+      { name: "Sausage & Egg McMuffin", label: "Sausage & Egg Muffin", description: "Sausage patty, egg, cheese on a toasted English muffin." },
+      { name: "Bacon & Egg McMuffin", label: "Bacon & Egg Muffin", description: "Bacon, egg, cheese on a toasted English muffin." },
+      { name: "Mighty McMuffin", description: "Two pieces of bacon, sausage patty, egg, cheese, BBQ sauce on a toasted English muffin." },
+      { name: "Hash Brown", description: "Crisp, golden-brown fried potato patty." },
+      { name: "Hotcakes (3pc)", label: "Hotcakes", description: "Served with butter and hotcake syrup." }
+    ]},
+    { name: "Snacks & Fries", short: "Snacks & Fries", items: [
+      { name: "Fries (Small)", label: "Small Fries", description: "World-famous golden french fries." },
+      { name: "Fries (Medium)", label: "Medium Fries", description: "World-famous golden french fries." },
+      { name: "Fries (Large)", label: "Large Fries", description: "World-famous golden french fries." },
+      { name: "Apple Pie", description: "Crispy pastry filled with warm apple pieces." },
+      { name: "Mozzarella Sticks", label: "Mozzarella Sticks", description: "Crispy golden coating filled with melted mozzarella cheese." }
+    ]},
+    { name: "Desserts", items: [
+      { name: "McFlurry with M&M's Minis", label: "M&M's McFlurry", description: "Soft serve swirled with M&M's Minis and chocolate topping." },
+      { name: "McFlurry with Oreo Cookies", label: "Oreo McFlurry", description: "Soft serve swirled with crushed Oreo cookies and chocolate topping." },
+      { name: "Chocolate Sundae", label: "Choc Sundae", description: "Soft serve ice cream with rich chocolate topping." },
+      { name: "Strawberry Sundae", description: "Soft serve ice cream with sweet strawberry topping." },
+      { name: "Caramel Sundae", description: "Soft serve ice cream with rich caramel topping." },
+      { name: "Soft Serve Cone", description: "Creamy vanilla soft serve in a crisp cone." }
+    ]},
+    { name: "Drinks", items: [
+      { name: "Coca-Cola Classic", label: "Coke", description: "Cold, refreshing Coca-Cola." },
+      { name: "Coca-Cola Zero Sugar", label: "Coke Zero", description: "Great Coca-Cola taste with zero sugar." },
+      { name: "Sprite", description: "Crisp, clean lemon-lime taste." },
+      { name: "Fanta Orange", label: "Fanta", description: "Bright, bubbly orange flavor." },
+      { name: "Frozen Coke", description: "Icy, refreshing frozen Coca-Cola." },
+      { name: "Frozen Fanta", description: "Icy, refreshing frozen Fanta flavor." }
+    ]},
+    { name: "McCafé Coffee & Drinks", items: [
+      { name: "Flat White", description: "Espresso with steamed milk and a thin layer of microfoam." },
+      { name: "Latte", description: "Espresso with steamed milk and a layer of foam." },
+      { name: "Cappuccino", description: "Espresso with steamed milk, dense foam, and chocolate powder dusting." },
+      { name: "Long Black", description: "Espresso over hot water." },
+      { name: "Iced Latte", description: "Espresso and cold milk poured over ice." },
+      { name: "Iced Coffee", description: "Espresso, cold milk, soft serve ice cream, and whipped cream over ice." }
+    ]}
+  ]
+};
+
+// ---------- Hungry Jack's Australia menu (from hungry_jacks_australia_menu.json, no prices) ----------
+const HJ = {
+  country: "Australia", brand: "Hungry Jack's",
+  categories: [
+    { name: "Flame-Grilled Beef", items: [
+      { name: "Whopper", description: "Flame-grilled beef, ripe tomato, fresh lettuce, crinkle-cut pickles, mayo, and tomato sauce on a toasted sesame seed bun." },
+      { name: "Double Whopper", description: "Two flame-grilled beef patties, ripe tomato, fresh lettuce, crinkle-cut pickles, mayo, and tomato sauce on a toasted sesame seed bun." },
+      { name: "Triple Whopper", description: "Three flame-grilled beef patties, ripe tomato, fresh lettuce, crinkle-cut pickles, mayo, and tomato sauce on a toasted sesame seed bun." },
+      { name: "Whopper Cheese", description: "Flame-grilled beef, cheese, tomato, fresh lettuce, pickles, mayo, and tomato sauce." },
+      { name: "Double Whopper Cheese", label: "Double Whopper Cheese", description: "Two flame-grilled beef patties, cheese, tomato, fresh lettuce, pickles, mayo, and tomato sauce." },
+      { name: "Bacon & Cheese Whopper", label: "Bacon Cheese Whopper", description: "Flame-grilled beef, crispy bacon, cheese, tomato, fresh lettuce, pickles, mayo, and tomato sauce." },
+      { name: "Whopper Junior", label: "Whopper Jr", description: "A smaller flame-grilled beef patty, tomato, lettuce, pickles, mayo, and tomato sauce on a sesame seed bun." },
+      { name: "Whopper Junior Cheese", label: "Whopper Jr Cheese", description: "A smaller flame-grilled beef patty, cheese, tomato, lettuce, pickles, mayo, and tomato sauce." },
+      { name: "Cheeseburger", description: "Flame-grilled beef, cheese, pickles, mustard, and tomato sauce." },
+      { name: "Double Cheeseburger", label: "Double Cheese", description: "Two flame-grilled beef patties, two slices of cheese, pickles, mustard, and tomato sauce." },
+      { name: "Bacon Deluxe", description: "Flame-grilled beef, crispy bacon, cheese, lettuce, tomato, and mayo." },
+      { name: "Double Bacon Deluxe", description: "Two flame-grilled beef patties, crispy bacon, cheese, lettuce, tomato, and mayo." },
+      { name: "BBQ Cheeseburger", label: "BBQ Cheese", description: "Flame-grilled beef, cheese, and smoky BBQ sauce." },
+      { name: "Hamburger", description: "Flame-grilled beef patty, pickles, mustard, and tomato sauce." }
+    ]},
+    { name: "Chicken", items: [
+      { name: "Jack's Fried Chicken Burger - Classic", label: "Jack's Chicken Classic", description: "Thick, crunchy, juicy fried chicken whole-muscle breast fillet with lettuce and mayo on a brioche-style bun." },
+      { name: "Jack's Fried Chicken Burger - Spicy", label: "Jack's Chicken Spicy", description: "Thick fried chicken whole-muscle breast fillet with lettuce and spicy signature sauce on a brioche-style bun." },
+      { name: "Jack's Fried Chicken Burger - Spicy Bacon & Cheese", label: "Jack's Spicy Bacon Cheese", description: "Fried chicken fillet, bacon, cheese, lettuce, and spicy sauce on a brioche bun." },
+      { name: "Tendercrisp Chicken Classic", label: "Tendercrisp Classic", description: "Crispy chicken breast fillet, lettuce, and creamy mayo on a sesame seed bun." },
+      { name: "Tendercrisp Bacon & Cheese", label: "Tendercrisp Bacon Cheese", description: "Crispy chicken breast fillet, bacon, cheese, lettuce, and creamy mayo." },
+      { name: "Grilled Chicken Classic", label: "Grilled Chicken", description: "Flame-grilled chicken breast fillet, lettuce, tomato, and mayo on a specialty bun." },
+      { name: "Grilled Chicken Bacon & Cheese", label: "Grilled Chicken Bacon Cheese", description: "Flame-grilled chicken breast fillet, bacon, cheese, lettuce, tomato, and mayo." },
+      { name: "Chicken Royale", description: "Crumbed chicken patty, lettuce, and mayo on a long sesame seed bun." },
+      { name: "Chicken Royale with Cheese", label: "Chicken Royale Cheese", description: "Crumbed chicken patty, cheese, lettuce, and mayo on a long sesame seed bun." }
+    ]},
+    { name: "Breakfast", items: [
+      { name: "BBQ Bacon & Egg Muffin", label: "BBQ Bacon Egg Muffin", description: "Flame-grilled bacon, a cracked egg, cheese, and smoky BBQ sauce on an English muffin." },
+      { name: "Sausage & Egg Muffin", label: "Sausage Egg Muffin", description: "Savoury sausage patty, cracked egg, and cheese on a toasted English muffin." },
+      { name: "Bacon, Egg & Tomato Relish Muffin", label: "Bacon Egg Relish Muffin", description: "Crispy bacon, cracked egg, cheese, and rich tomato relish on a muffin." },
+      { name: "Hash Brown", description: "Crisp, golden-brown premium potato hash brown." },
+      { name: "Pancakes with Syrup", label: "Pancakes", description: "Three fluffy pancakes served golden brown with a sweet syrup." }
+    ]},
+    { name: "Sides & Snacks", items: [
+      { name: "Thick Cut Chips", description: "Golden, thick-cut potato chips, hot and lightly salted." },
+      { name: "Onion Rings", description: "Crisp, golden-brown battered onion rings." },
+      { name: "Chicken Nuggets", description: "Golden crumbed chicken breast nuggets served with a choice of dipping sauce." },
+      { name: "Cheesy Bacon Chips", description: "Thick-cut chips topped with a rich cheese sauce and crispy bacon pieces." }
+    ]},
+    { name: "Desserts & Drinks", items: [
+      { name: "Storm - Oreo", label: "Oreo Storm", description: "Soft serve ice cream blended with crushed Oreo cookie pieces." },
+      { name: "Storm - Flake", label: "Flake Storm", description: "Soft serve ice cream blended with Cadbury Flake chocolate pieces." },
+      { name: "Sundae", description: "Creamy soft serve with choice of Chocolate, Strawberry, or Caramel topping." },
+      { name: "Frozen Coke", description: "An icy-cold, refreshing frozen Coca-Cola beverage." },
+      { name: "Barista Coffee", description: "Freshly ground coffee options including Flat White, Latte, and Cappuccino." }
+    ]}
+  ]
+};
+
+// ---------- KFC Australia menu (from kfc_australia_menu.json, no prices) ----------
+const KFC = {
+  brand: "KFC Australia", country: "Australia", currency: "AUD",
+  categories: [
+    { category_name: "Shared Meals", items: [
+      { item_name: "Zinger Box", description: "A Zinger Burger, 3 Wicked Wings, 1 regular Chips, 1 regular Potato & Gravy, and a regular Drink." },
+      { item_name: "Original Recipe Box", label: "OR Box", description: "A piece of Original Recipe Chicken, 1 regular Chips, 1 regular Potato & Gravy, 1 regular Drink, and your choice of burger or twister." },
+      { item_name: "3 Piece Box", description: "3 pieces of Original Recipe Chicken, 1 regular Chips, 1 regular Potato & Gravy, 1 Dinner Roll, and a regular Drink." },
+      { item_name: "Family Feast", description: "10 pieces of Original Recipe Chicken, 2 large Chips, 1 large Potato & Gravy, 1 large Coleslaw, and 1 1.25L Drink." },
+      { item_name: "Mega Feast", description: "15 pieces of Original Recipe Chicken, 2 large Chips, 1 large Potato & Gravy, 1 large Coleslaw, and 1 1.25L Drink." },
+      { item_name: "Mixed Feast", description: "4 pieces of Original Recipe Chicken, 6 Nuggets, 6 Wicked Wings, 2 large Chips, and 1 large Potato & Gravy." }
+    ]},
+    { category_name: "Burgers & Twisters", items: [
+      { item_name: "Zinger Burger", description: "A spicy, crispy chicken breast fillet with lettuce and mayo on a sesame seed bun." },
+      { item_name: "Original Recipe Burger", label: "OR Burger", description: "A crispy chicken breast fillet coated in the secret 11 herbs and spices, with lettuce and mayo on a sesame seed bun." },
+      { item_name: "Zinger Bacon & Cheese Burger", label: "Zinger Bacon Cheese", description: "A spicy Zinger fillet with bacon, cheese, lettuce, and mayo." },
+      { item_name: "Original Twister", description: "Two crispy chicken strips, lettuce, tomato, and pepper mayo wrapped in a warm tortilla." },
+      { item_name: "Zinger Twister", description: "Two spicy Zinger strips, lettuce, tomato, and supercharged sauce wrapped in a warm tortilla." }
+    ]},
+    { category_name: "Chicken & Snacks", items: [
+      { item_name: "Original Recipe Chicken", label: "Original Recipe", description: "Fresh chicken pieces coated in our famous 11 secret herbs and spices." },
+      { item_name: "Wicked Wings", description: "Crispy, spicy chicken wings coated in a fiery marinade." },
+      { item_name: "Original Tender", description: "Lean, tender strips of chicken breast coated in a crunchy coating." },
+      { item_name: "Popcorn Chicken", description: "Bite-sized pieces of all-breast meat chicken, marinated and golden-fried." },
+      { item_name: "KFC Nuggets", description: "100% chicken breast nuggets coated in our secret recipe seasoning." }
+    ]},
+    { category_name: "Sides & Extras", items: [
+      { item_name: "Chips", description: "Thick-cut potato chips cooked until golden and sprinkled with signature KFC seasoning salt." },
+      { item_name: "Potato & Gravy", description: "Hot mashed potato topped with signature KFC gravy." },
+      { item_name: "Coleslaw", description: "Freshly shredded cabbage and carrots dressed in a sweet dressing." },
+      { item_name: "Dinner Roll", description: "A soft, warm bread roll." },
+      { item_name: "Supercharged Sauce", label: "Supercharged", description: "KFC's signature spicy and sweet dipping sauce." },
+      { item_name: "Gravy Sauce", description: "A tub of hot, savory signature KFC gravy." }
+    ]},
+    { category_name: "Drinks & Desserts", items: [
+      { item_name: "Chocolate Mousse", label: "Choc Mousse", description: "A light and creamy chocolate dessert portion." },
+      { item_name: "Soft Drink (1.25L)", label: "Soft Drink 1.25L", description: "Choose from Pepsi, Pepsi Max, Solo, or 7Up." },
+      { item_name: "Soft Drink (Regular/Large)", label: "Soft Drink", description: "Post-mix carbonated beverage served cold." },
+      { item_name: "Mountain Dew Freeze", label: "Mtn Dew Freeze", description: "A refreshing frozen slushie beverage (available at select locations)." }
+    ]}
+  ]
+};
+
 const RESTAURANTS = {
   jollibee: {
     key: "jollibee", name: "Jollibee", icon: "🐝", photoPrefix: "jb",
@@ -1541,23 +2019,65 @@ const RESTAURANTS = {
         };
       })
     }))
+  },
+  mcd: {
+    key: "mcd", name: "McDonald's", icon: "🍟", photoPrefix: "mcd", noPrices: true, country: "Australia",
+    searchName: "McDonald's",
+    orderHow: "Order at the counter, a self-serve kiosk, the drive-thru, or in the McDonald's app.",
+    categories: MCD.categories.map(c => ({
+      label: c.short || c.name,
+      items: c.items.map(it => ({ ...it, category: c.name, rest: "mcd", price: null, priceText: "" }))
+    }))
+  },
+  hj: {
+    key: "hj", name: "Hungry Jack's", icon: "🍔", photoPrefix: "hj", noPrices: true, country: "Australia",
+    searchName: "Hungry Jack's",
+    orderHow: "Order at the counter, a kiosk, the drive-thru, or in the Hungry Jack's app.",
+    categories: HJ.categories.map(c => ({
+      label: c.short || c.name,
+      items: c.items.map(it => ({ ...it, category: c.name, rest: "hj", price: null, priceText: "" }))
+    }))
+  },
+  kfc: {
+    key: "kfc", name: "KFC", icon: "🪣", photoPrefix: "kfc", noPrices: true, country: "Australia",
+    searchName: "KFC",
+    orderHow: "Order at the counter, a kiosk, the drive-thru, or in the KFC app.",
+    categories: KFC.categories.map(c => ({
+      label: c.category_name,
+      items: c.items.map(it => ({ name: it.item_name, label: it.label, description: it.description,
+        category: c.category_name, rest: "kfc", price: null, priceText: "" }))
+    }))
   }
 };
 // Desserts move from the dish ring to the dessert ring
 const REST_DESSERTS = {
   jollibee: ["Peach Mango Pie Solo", "3-pc. Peach Mango Pie To-Go", "Choco Sundae"],
-  maxs: ["Classic Caramel Bar", "Halo-Halo Regular", "Buko Pandan"]
+  maxs: ["Classic Caramel Bar", "Halo-Halo Regular", "Buko Pandan"],
+  mcd: MCD.categories.find(c => c.name === "Desserts").items.map(i => i.name),
+  hj: ["Storm - Oreo", "Storm - Flake", "Sundae"],
+  kfc: ["Chocolate Mousse"]
+};
+// McDonald's lists its own drinks, so those go on the drink ring instead of the generic list
+const REST_OWN_DRINKS = {
+  mcd: MCD.categories.filter(c => /Drinks/.test(c.name)).flatMap(c => c.items.map(i => i.name)),
+  hj: ["Frozen Coke", "Barista Coffee"],
+  kfc: ["Soft Drink (1.25L)", "Soft Drink (Regular/Large)", "Mountain Dew Freeze"]
 };
 // Neither menu file lists drinks, so the drink ring uses common fast-food and restaurant drinks without prices
 const REST_DRINKS = ["Iced Tea", "Cola", "Pineapple Juice", "Calamansi Juice", "Bottled Water", "Hot Coffee"];
 Object.values(RESTAURANTS).forEach(r => {
   const dessertNames = REST_DESSERTS[r.key] || [];
+  const drinkNames = REST_OWN_DRINKS[r.key] || [];
   const all = r.categories.flatMap(c => c.items);
   r.desserts = all.filter(it => dessertNames.includes(it.name)).map(it => ({ ...it, ring: "dessert" }));
   r.categories = r.categories
-    .map(c => ({ ...c, label: c.label.replace(/ & Desserts$/, ""), items: c.items.filter(it => !dessertNames.includes(it.name)) }))
+    .map(c => ({ ...c, label: c.label.replace(/ & Desserts$/, ""), items: c.items.filter(it => !dessertNames.includes(it.name) && !drinkNames.includes(it.name)) }))
     .filter(c => c.items.length);
   r.all = r.categories.flatMap(c => c.items);
+  if (drinkNames.length) {
+    r.drinks = all.filter(it => drinkNames.includes(it.name)).map(it => ({ ...it, ring: "drink" }));
+    return;
+  }
   r.drinks = REST_DRINKS.map(name => ({
     name, ring: "drink",
     description: `Ask for it at the counter. Drinks aren't in the ${r.name} menu file, so availability and prices vary by branch.`
@@ -1569,7 +2089,10 @@ const JB_ALL = RESTAURANTS.jollibee.all;
 const PLACES = [
   { key: "filipino", label: "Filipino restaurant", icon: "🍽️" },
   { key: "jollibee", label: "Jollibee", icon: "🐝" },
-  { key: "maxs", label: "Max's", icon: "🍗" }
+  { key: "maxs", label: "Max's", icon: "🍗" },
+  { key: "mcd", label: "McDonald's", icon: "🍟" },
+  { key: "hj", label: "Hungry Jack's", icon: "🍔" },
+  { key: "kfc", label: "KFC", icon: "🪣" }
 ];
 const PLACE_KEY = "kain-na-place";
 let place = "filipino";
@@ -1779,7 +2302,8 @@ function wrapLines(text, maxWidth) {
 
 function draw() {
   const size = canvas.getBoundingClientRect().width;
-  if (!size) return;
+  if (gameStyle === "slots") renderSlotsIdle();
+  if (!size) { renderMenuList(); return; }
   const items = currentItems();
   const drinks = currentDrinks();
   const desserts = currentDesserts();
@@ -1964,6 +2488,8 @@ function spin() {
   tagEl.textContent = "Spinning…";
   nameEl.textContent = "Hmm, ano kaya?";
   descEl.textContent = "Three rings, three picks: a dish, a drink and a dessert.";
+  gsButtons.forEach(b => b.disabled = true);
+  if (gameStyle === "slots") { runSlots(); return; }
 
   const TAU = Math.PI * 2;
   const lists = [currentItems(), currentDrinks(), currentDesserts()];
@@ -2120,7 +2646,7 @@ function finishJollibee(item) {
   nameEl.textContent = item.name;
   descEl.textContent = item.description;
   priceEl.textContent = item.priceText;
-  priceEl.hidden = false;
+  priceEl.hidden = !item.priceText;
   showArt(item, item.rest, Math.max(0, r.all.indexOf(item)));
   showJollibeePlan(item);
   renderPairings(true);
@@ -2140,6 +2666,11 @@ function endSpin() {
   void spinBtn.offsetWidth;
   spinBtn.classList.add("landed");
   againBtn.hidden = false;
+  gsButtons.forEach(b => b.disabled = false);
+  slotSpinBtn.disabled = false;
+  leverBtn.disabled = false;
+  leverBtn.classList.remove("pulled");
+  slotWrap.classList.remove("running");
   // Let the landing strike and confetti play, then show the result pop-up
   setTimeout(openResultPopup, reduceMotion ? 150 : 900);
   mealsEl.querySelectorAll(".meal").forEach(b => b.disabled = false);
@@ -2154,16 +2685,17 @@ const spinLabel = document.getElementById("spinLabel");
 const againBtn = document.getElementById("againBtn");
 const confettiCanvas = document.getElementById("confetti");
 againBtn.addEventListener("click", () => {
-  const r = canvas.getBoundingClientRect();
+  const stage = gameStyle === "slots" ? slotWrap : canvas;
+  const r = stage.getBoundingClientRect();
   if (r.top < 0 || r.bottom > window.innerHeight) {
-    canvas.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
+    stage.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "center" });
     setTimeout(spin, reduceMotion ? 0 : 450);
   } else spin();
 });
 
-function burstConfetti() {
+function burstConfetti(target) {
   if (reduceMotion) return;
-  const cv = confettiCanvas;
+  const cv = target || confettiCanvas;
   const box = cv.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   cv.width = Math.round(box.width * dpr);
@@ -2348,6 +2880,9 @@ function openResultPopup() {
   if (h) h.setAttribute("aria-live", "polite");
   popBody.innerHTML = "";
   popBody.appendChild(copy);
+  const addBtn = document.getElementById("popAddCart");
+  addBtn.disabled = false;
+  addBtn.textContent = "🛒 Add to cart";
   try { resultPop.showModal(); } catch (e) { resultPop.setAttribute("open", ""); }
   document.getElementById("popAgain").focus();
 }
@@ -2367,6 +2902,635 @@ document.getElementById("popDetails").addEventListener("click", () => {
 // Tap outside the card to close
 resultPop.addEventListener("click", e => { if (e.target === resultPop) closeResultPopup(); });
 
+
+// ---------- Game style: wheel or slot machine ----------
+const GAME_KEY = "kain-na-game";
+let gameStyle = "wheel";
+try { if (localStorage.getItem(GAME_KEY) === "slots") gameStyle = "slots"; } catch (e) {}
+const gsButtons = [...document.querySelectorAll(".gs-btn")];
+const slotWrap = document.getElementById("slotWrap");
+const slotSpinBtn = document.getElementById("slotSpin");
+const leverBtn = document.getElementById("lever");
+const reels = [0, 1, 2].map(i => document.getElementById("reel" + i));
+const wheelWrapEl = document.querySelector(".wheel-wrap");
+const ringLegendEl = document.querySelector(".ring-legend");
+const stepHintText = document.getElementById("stepHintText");
+let slotSig = "";
+let reelIndex = [0, 0, 0]; // which item sits on the payline in each reel
+
+function applyGameStyle() {
+  const slots = gameStyle === "slots";
+  gsButtons.forEach(b => b.setAttribute("aria-checked", String(b.dataset.game === gameStyle)));
+  slotWrap.hidden = !slots;
+  wheelWrapEl.hidden = slots;
+  ringLegendEl.hidden = slots;
+  stepHintText.innerHTML = slots
+    ? "Pull the lever or tap <strong>SPIN!</strong> for a dish, a drink and a dessert"
+    : "Tap <strong>SPIN!</strong> for a dish, a drink and a dessert";
+  slotSig = "";
+  winners = null;
+  if (slots) renderSlotsIdle(); else resize();
+}
+gsButtons.forEach(b => b.addEventListener("click", () => {
+  if (spinning || b.dataset.game === gameStyle) return;
+  gameStyle = b.dataset.game;
+  try { localStorage.setItem(GAME_KEY, gameStyle); } catch (e) {}
+  applyGameStyle();
+}));
+// Arrow keys move between the two options, like a radio group
+document.querySelector(".game-switch").addEventListener("keydown", e => {
+  if (!["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+  const next = gsButtons.find(b => b.dataset.game !== gameStyle);
+  next.click(); next.focus(); e.preventDefault();
+});
+
+function reelLists() { return [currentItems(), currentDrinks(), currentDesserts()]; }
+function cellPx(reel) { return parseFloat(getComputedStyle(reel).getPropertyValue("--cell")) || 96; }
+
+function makeCell(item, ringIdx, idx) {
+  const d = document.createElement("div");
+  d.className = "cell";
+  if (!item) { d.innerHTML = '<span class="cell-name">—</span>'; return d; }
+  const t = document.createElement("span");
+  t.className = "thumb";
+  t.innerHTML = thumbHTML(item, !!item.rest, idx + ringIdx * 2);
+  const n = document.createElement("span");
+  n.className = "cell-name";
+  n.textContent = item.label || item.name;
+  d.append(t, n);
+  return d;
+}
+
+// Build each strip with enough copies of its list to scroll through, then park it on reelIndex
+function buildStrip(reel, list, ringIdx, copies) {
+  const strip = reel.querySelector(".strip");
+  strip.innerHTML = "";
+  const n = Math.max(list.length, 1);
+  for (let c = 0; c < copies; c++) {
+    for (let i = 0; i < n; i++) strip.appendChild(makeCell(list[i], ringIdx, i));
+  }
+  return n;
+}
+function placePayline(h) {
+  const pl = document.querySelector(".payline");
+  pl.style.top = (reels[0].offsetTop + h) + "px";
+  pl.style.height = h + "px";
+}
+function park(reel, rowIndex) {
+  const h = cellPx(reel);
+  // rowIndex sits in the middle row of the 3-row window
+  reel.querySelector(".strip").style.transform = `translateY(${-(rowIndex - 1) * h}px)`;
+}
+
+function renderSlotsIdle() {
+  if (gameStyle !== "slots" || spinning) return;
+  const lists = reelLists();
+  const sig = lists.map(l => l.map(x => x.name).join("|")).join("§") + photosVersion + (winners ? JSON.stringify(winners) : "");
+  if (sig === slotSig) return;
+  slotSig = sig;
+  const h = cellPx(reels[0]);
+  placePayline(h);
+  reels.forEach((reel, k) => {
+    const n = buildStrip(reel, lists[k], k, 3);
+    if (reelIndex[k] >= n) reelIndex[k] = 0;
+    park(reel, n + reelIndex[k]);          // middle copy, so there are cells above and below
+    reel.classList.toggle("won", !!winners && lists[k].length > 0);
+    document.querySelector(".slot-window").classList.toggle("landed", !!winners);
+  });
+}
+
+function runSlots() {
+  const lists = reelLists();
+  const picks = lists.map(l => l.length ? Math.floor(Math.random() * l.length) : -1);
+  slotWrap.classList.add("running");
+  slotSpinBtn.disabled = true;
+  leverBtn.disabled = true;
+  leverBtn.classList.add("pulled");
+  setTimeout(() => leverBtn.classList.remove("pulled"), 350);
+  reels.forEach(r => r.classList.remove("won"));
+  document.querySelector(".slot-window").classList.remove("landed");
+  winners = null;
+  playWhoosh();
+  duckMusic(true);
+
+  const h = cellPx(reels[0]);
+  placePayline(h);
+  const durations = reduceMotion ? [400, 550, 700] : [1900, 2600, 3300]; // left to right
+  const plans = reels.map((reel, k) => {
+    const n = Math.max(lists[k].length, 1);
+    const loops = reduceMotion ? 1 : 6 + k * 2;
+    const copies = loops + 4;
+    buildStrip(reel, lists[k], k, copies);
+    const startRow = n + reelIndex[k];
+    const endRow = n * (loops + 2) + Math.max(picks[k], 0);
+    park(reel, startRow);
+    return { reel, strip: reel.querySelector(".strip"), from: startRow, to: endRow, n, done: false, lastRow: startRow };
+  });
+  const t0 = performance.now();
+  let lastTick = 0;
+
+  function frame(now) {
+    let all = true;
+    plans.forEach((p, k) => {
+      const t = Math.min(1, (now - t0) / durations[k]);
+      // Ease out with a tiny overshoot so the reel "clunks" into place
+      const e = t < 1 ? 1 - Math.pow(1 - t, 3) * (1 - 0.0 * t) : 1;
+      const row = p.from + (p.to - p.from) * e;
+      p.strip.style.transform = `translateY(${-(row - 1) * h}px)`;
+      p.reel.classList.toggle("blur", t < 0.75 && !reduceMotion);
+      const whole = Math.floor(row);
+      if (whole !== p.lastRow) { p.lastRow = whole; if (now - lastTick > 40) { lastTick = now; playTick(1 - t); } }
+      if (t < 1) all = false;
+      else if (!p.done) {
+        p.done = true;
+        p.reel.classList.add("won");
+        playTick(0);
+        reelIndex[k] = Math.max(picks[k], 0);
+      }
+    });
+    if (!all) { requestAnimationFrame(frame); return; }
+    winners = { dish: picks[0], drink: picks[1], dessert: picks[2] };
+    document.querySelector(".slot-window").classList.add("landed");
+    burstConfetti(document.getElementById("slotConfetti"));
+    ringPicks = {
+      drink: picks[1] >= 0 ? lists[1][picks[1]] : null,
+      dessert: picks[2] >= 0 ? lists[2][picks[2]] : null
+    };
+    slotSig = "";
+    finish(picks[0]);
+  }
+  requestAnimationFrame(frame);
+}
+
+slotSpinBtn.addEventListener("click", spin);
+leverBtn.addEventListener("click", spin);
+window.addEventListener("resize", () => { if (gameStyle === "slots") { slotSig = ""; renderSlotsIdle(); } });
+
+
+// ---------- Cart and order summary ----------
+let planItem = null; // restaurant item shown in the details panel, so its links can follow the cart
+const CART_KEY = "kain-na-cart";
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]") || []; } catch (e) { cart = []; }
+const cartFab = document.getElementById("cartFab");
+const cartCount = document.getElementById("cartCount");
+const cartPop = document.getElementById("cartPop");
+const cartBody = document.getElementById("cartBody");
+const cartActions = document.getElementById("cartActions");
+const toastEl = document.getElementById("toast");
+const PLACE_LABELS = {
+  jollibee: "🐝 Jollibee", maxs: "🍗 Max's", mcd: "🍟 McDonald's", hj: "🍔 Hungry Jack's", kfc: "🪣 KFC",
+  cook: "🧑‍🍳 Cook at home", eatout: "🍽️ Filipino restaurant", order: "🛵 Order in (delivery)"
+};
+const PLACE_ORDER = ["jollibee", "maxs", "mcd", "hj", "kfc", "eatout", "order", "cook"];
+const KIND_ICON = { dish: "🍛", drink: "🥤", dessert: "🍮" };
+
+function saveCart() { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {} }
+function cartQty() { return cart.reduce((a, l) => a + l.qty, 0); }
+
+// Where an item will come from: its restaurant, or how the person chose to eat
+function placeFor(item, how) { return item.rest || how || "cook"; }
+
+function addToCart(entries) {
+  let added = 0;
+  entries.forEach(({ item, kind, place }) => {
+    if (!item) return;
+    const key = `${place}|${kind}|${item.name}`;
+    const line = cart.find(l => l.key === key);
+    if (line) line.qty++;
+    else cart.push({ key, name: item.name, kind, place, rest: item.rest || (RESTAURANTS[place] ? place : null), ring: item.ring || null,
+      price: typeof item.price === "number" ? item.price : null, priceText: item.priceText || "", qty: 1 });
+    added++;
+  });
+  if (!added) return;
+  saveCart();
+  updateCartFab(true);
+  showToast(added === 1 ? `Added ${entries[0].item.name} to your cart` : `Added ${added} items to your cart`);
+}
+
+function updateCartFab(bump) {
+  const n = cartQty();
+  cartCount.textContent = n;
+  cartFab.hidden = n === 0;
+  cartFab.setAttribute("aria-label", `Open cart, ${n} item${n === 1 ? "" : "s"}`);
+  if (bump && !reduceMotion) { cartFab.classList.remove("bump"); void cartFab.offsetWidth; cartFab.classList.add("bump"); }
+  // Keep the restaurant links in the details panel in step with the cart
+  if (planItem && !recipeEl.hidden) showJollibeePlan(planItem);
+}
+
+let toastTimer = 0;
+function showToast(msg) {
+  toastEl.textContent = msg;
+  toastEl.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; }, 2200);
+}
+
+// The dish, drink and dessert from the latest spin
+function latestPicks() {
+  if (!lastPick) return [];
+  if (lastPick.jb) {
+    const place = lastPick.item.rest;
+    return [
+      { item: lastPick.item, kind: "dish", place },
+      { item: ringPicks.drink, kind: "drink", place },
+      { item: ringPicks.dessert, kind: "dessert", place }
+    ].filter(e => e.item);
+  }
+  const dish = DATA[lastPick.meal] && DATA[lastPick.meal][lastPick.index];
+  const how = lastPick.mode || "cook";
+  return [
+    { item: dish, kind: "dish", place: how },
+    { item: ringPicks.drink, kind: "drink", place: how },
+    { item: ringPicks.dessert, kind: "dessert", place: how }
+  ].filter(e => e.item);
+}
+
+document.getElementById("popAddCart").addEventListener("click", e => {
+  addToCart(latestPicks());
+  e.currentTarget.disabled = true;
+  e.currentTarget.textContent = "✓ Added to cart";
+});
+
+function groupedCart() {
+  const groups = {};
+  cart.forEach(l => { (groups[l.place] = groups[l.place] || []).push(l); });
+  return PLACE_ORDER.filter(p => groups[p]).map(p => {
+    const lines = groups[p].sort((a, b) => ["dish", "drink", "dessert"].indexOf(a.kind) - ["dish", "drink", "dessert"].indexOf(b.kind));
+    const priced = lines.filter(l => l.price !== null);
+    return { place: p, label: PLACE_LABELS[p] || p, lines,
+      subtotal: priced.reduce((a, l) => a + l.price * l.qty, 0), hasPrices: priced.length > 0,
+      unpriced: lines.filter(l => l.price === null).reduce((a, l) => a + l.qty, 0) };
+  });
+}
+
+function openCart() {
+  renderCart();
+  try { cartPop.showModal(); } catch (e) { cartPop.setAttribute("open", ""); }
+}
+function closeCart() { if (cartPop.open) cartPop.close(); }
+cartFab.addEventListener("click", openCart);
+document.getElementById("cartClose").addEventListener("click", closeCart);
+cartPop.addEventListener("click", e => { if (e.target === cartPop) closeCart(); });
+
+function actionButton(text, cls, onClick) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "btn" + (cls ? " " + cls : "");
+  b.textContent = text;
+  b.addEventListener("click", onClick);
+  cartActions.appendChild(b);
+  return b;
+}
+
+function renderCart() {
+  document.getElementById("cartTitle").textContent = "🛒 Your cart";
+  cartBody.innerHTML = "";
+  cartActions.innerHTML = "";
+  if (!cart.length) {
+    cartBody.innerHTML = '<p class="cart-empty">Your cart is empty. Spin, then tap <strong>Add to cart</strong>.</p>';
+    actionButton("Keep spinning", "", closeCart);
+    return;
+  }
+  const groups = groupedCart();
+  groups.forEach(g => {
+    const sec = document.createElement("section");
+    sec.className = "cart-group";
+    const h = document.createElement("h3");
+    h.innerHTML = `<span></span><small></small>`;
+    h.firstChild.textContent = g.label;
+    h.lastChild.textContent = g.hasPrices ? formatPHP(g.subtotal) : "";
+    const ul = document.createElement("ul");
+    ul.className = "cart-lines";
+    g.lines.forEach(l => {
+      const li = document.createElement("li");
+      li.className = "cart-line";
+      const t = document.createElement("span");
+      t.className = "thumb";
+      t.innerHTML = thumbHTML({ name: l.name, rest: l.rest, ring: l.ring || (l.kind === "drink" ? "drink" : l.kind === "dessert" ? "dessert" : undefined) }, !!l.rest, 0);
+      const txt = document.createElement("span");
+      const n = document.createElement("span"); n.className = "cl-name"; n.textContent = l.name;
+      const m = document.createElement("span"); m.className = "cl-meta";
+      m.textContent = `${KIND_ICON[l.kind]} ${l.kind[0].toUpperCase() + l.kind.slice(1)}` +
+        (l.price !== null ? ` · ${formatPHP(l.price * l.qty)}` : l.rest ? " · price at the counter" : "");
+      txt.append(n, m);
+      const q = document.createElement("span");
+      q.className = "qty";
+      const minus = document.createElement("button"); minus.type = "button"; minus.textContent = "−";
+      minus.setAttribute("aria-label", l.qty === 1 ? `Remove ${l.name}` : `One less ${l.name}`);
+      const out = document.createElement("output"); out.textContent = l.qty;
+      const plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+";
+      plus.setAttribute("aria-label", `One more ${l.name}`);
+      minus.addEventListener("click", () => { l.qty--; if (l.qty <= 0) cart = cart.filter(x => x !== l); saveCart(); updateCartFab(); renderCart(); });
+      plus.addEventListener("click", () => { l.qty++; saveCart(); updateCartFab(); renderCart(); });
+      q.append(minus, out, plus);
+      li.append(t, txt, q);
+      ul.appendChild(li);
+    });
+    sec.append(h, ul);
+    cartBody.appendChild(sec);
+  });
+  const total = groups.reduce((a, g) => a + g.subtotal, 0);
+  if (total > 0) {
+    const tot = document.createElement("div");
+    tot.className = "cart-total";
+    tot.innerHTML = "<span>Total</span><span></span>";
+    tot.lastChild.textContent = formatPHP(total);
+    cartBody.appendChild(tot);
+    const note = document.createElement("p");
+    note.className = "cart-note";
+    note.textContent = "Prices are from the Philippine menus. Drinks and home-cooked dishes aren't priced, so they aren't in the total.";
+    cartBody.appendChild(note);
+  }
+  actionButton("✅ Ready to order", "cart-add", renderSummary);
+  actionButton("Keep spinning", "quiet", closeCart);
+  actionButton("Clear cart", "quiet", renderClearConfirm);
+}
+
+// In-page confirmation (the browser's confirm box is blocked on the published page)
+function renderClearConfirm() {
+  const n = cartQty();
+  document.getElementById("cartTitle").textContent = "🗑️ Clear cart?";
+  cartBody.innerHTML = "";
+  cartActions.innerHTML = "";
+  const p = document.createElement("p");
+  p.className = "cart-empty";
+  p.textContent = `Remove all ${n} item${n === 1 ? "" : "s"} from your cart? This can't be undone.`;
+  cartBody.appendChild(p);
+  const yes = actionButton("Yes, clear cart", "cart-add", () => {
+    cart = [];
+    saveCart();
+    updateCartFab();
+    renderCart();
+    showToast("Your cart is empty");
+  });
+  actionButton("Cancel", "quiet", renderCart);
+  yes.focus();
+}
+
+function summaryText() {
+  const groups = groupedCart();
+  const date = new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  const lines = [`Uno and Zac Eats order (${date})`, ""];
+  groups.forEach(g => {
+    lines.push(g.label.replace(/^\S+\s/, "").toUpperCase());
+    g.lines.forEach(l => {
+      const price = l.price !== null ? formatPHP(l.price * l.qty) : (l.rest ? "price at the counter" : "");
+      lines.push(`  ${l.qty} × ${l.name}${price ? `  (${price})` : ""}`);
+    });
+    if (g.hasPrices) lines.push(`  Subtotal: ${formatPHP(g.subtotal)}${g.unpriced ? ` + ${g.unpriced} item${g.unpriced === 1 ? "" : "s"} priced at the counter` : ""}`);
+    lines.push("");
+  });
+  const total = groups.reduce((a, g) => a + g.subtotal, 0);
+  if (total > 0) lines.push(`Total (priced items): ${formatPHP(total)}`);
+  lines.push(`${cartQty()} item${cartQty() === 1 ? "" : "s"} in total. Bakbak na!`);
+  return lines.join("\n");
+}
+
+function renderSummary() {
+  document.getElementById("cartTitle").textContent = "🧾 Order summary";
+  cartBody.innerHTML = "";
+  cartActions.innerHTML = "";
+  const groups = groupedCart();
+  const sheet = document.createElement("div");
+  sheet.className = "summary-sheet";
+  groups.forEach(g => {
+    const h = document.createElement("h3");
+    h.textContent = g.label;
+    const ul = document.createElement("ul");
+    g.lines.forEach(l => {
+      const li = document.createElement("li");
+      const a = document.createElement("span");
+      a.textContent = `${l.qty} × ${l.name}`;
+      const b = document.createElement("span");
+      b.textContent = l.price !== null ? formatPHP(l.price * l.qty) : (l.rest ? "at counter" : "");
+      li.append(a, b);
+      ul.appendChild(li);
+    });
+    sheet.append(h, ul);
+    if (g.hasPrices) {
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.innerHTML = "<span>Subtotal</span><span></span>";
+      sub.lastChild.textContent = formatPHP(g.subtotal) + (g.unpriced ? ` + ${g.unpriced} at counter` : "");
+      sheet.appendChild(sub);
+    }
+  });
+  const total = groups.reduce((a, g) => a + g.subtotal, 0);
+  if (total > 0) {
+    const tot = document.createElement("div");
+    tot.className = "cart-total";
+    tot.innerHTML = "<span>Total</span><span></span>";
+    tot.lastChild.textContent = formatPHP(total);
+    sheet.appendChild(tot);
+  }
+  cartBody.appendChild(sheet);
+
+  // Handy next steps for each place in the order
+  const links = document.createElement("div");
+  links.className = "summary-links";
+  const link = (text, href) => {
+    const a = document.createElement("a");
+    a.className = "btn quiet"; a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = text;
+    links.appendChild(a);
+  };
+  groups.forEach(g => {
+    if (g.place === "jollibee") link("📍 Nearest Jollibee", "https://www.google.com/maps/search/Jollibee+near+me");
+    if (g.place === "kfc") link("📍 Nearest KFC", "https://www.google.com/maps/search/KFC+near+me");
+    if (g.place === "hj") link("📍 Nearest Hungry Jack's", `https://www.google.com/maps/search/${encodeURIComponent("Hungry Jack's")}+near+me`);
+    if (g.place === "mcd") link("📍 Nearest McDonald's", `https://www.google.com/maps/search/${encodeURIComponent("McDonald's")}+near+me`);
+    if (g.place === "maxs") link("📍 Nearest Max's", `https://www.google.com/maps/search/${encodeURIComponent("Max's Restaurant")}+near+me`);
+    if (g.place === "eatout") link("📍 Filipino restaurants nearby", "https://www.google.com/maps/search/Filipino+restaurant+near+me");
+    if (g.place === "order") link("🛵 Filipino food delivery", "https://www.google.com/search?q=Filipino+food+delivery+near+me");
+  });
+  if (links.children.length) cartBody.appendChild(links);
+  const status = document.createElement("p");
+  status.className = "cart-note";
+  status.setAttribute("role", "status");
+  cartBody.appendChild(status);
+
+  actionButton("📋 Copy order", "cart-add", async () => {
+    const text = summaryText();
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select(); ok = document.execCommand("copy"); ta.remove();
+      } catch (e2) { ok = false; }
+    }
+    status.textContent = ok ? "Copied. Paste it into a message or your delivery app notes." : "Couldn't copy here. Use Save as text instead.";
+  });
+  actionButton("💾 Save as text", "quiet", async () => {
+    const text = summaryText();
+    const filename = "uno-and-zac-eats-order.txt";
+    const downloads = await downloadsPromise;
+    if (downloads) {
+      try { await downloads.save({ filename, data: text }); status.textContent = `Saved ${filename}.`; }
+      catch (err) { status.textContent = err && err.code === "declined" ? "Save cancelled." : "Saving isn't available here."; }
+      return;
+    }
+    try {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+      a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+      status.textContent = `Saved ${filename}.`;
+    } catch (e) { status.textContent = "Saving isn't available here."; }
+  });
+  actionButton("← Back to cart", "quiet", renderCart);
+}
+
+updateCartFab();
+
+
+// ---------- Bulk photos: match many photos to items by file name ----------
+const bulkPop = document.getElementById("bulkPop");
+const bulkBody = document.getElementById("bulkBody");
+const bulkInput = document.getElementById("bulkInput");
+let bulkRows = [];   // { file, data, select }
+let bulkCands = [];  // { item, isRest, ring, where }
+
+const normName = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .replace(/&/g, " and ").replace(/['’]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+
+// Everything that can have a photo: items on the wheel first, then every other menu
+function photoCandidates() {
+  const seen = new Set(), out = [];
+  const add = (item, ring, where, onWheel) => {
+    if (!item) return;
+    const isRest = !!item.rest;
+    const key = photoKey(item, isRest);
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({ item, isRest, ring, where, onWheel, key });
+  };
+  const here = currentRest() ? currentRest().name : MEALS.find(m => m.key === meal).label;
+  currentItems().forEach(it => add(it, "dish", here, true));
+  currentDrinks().forEach(it => add(it, "drink", here, true));
+  currentDesserts().forEach(it => add(it, "dessert", here, true));
+  MEALS.forEach(m => DATA[m.key].forEach(it => add(it, "dish", m.label, false)));
+  DATA.drinks.forEach(it => add(Object.assign(it, { ring: "drink" }), "drink", "Drinks", false));
+  DATA.desserts.forEach(it => add(Object.assign(it, { ring: "dessert" }), "dessert", "Desserts", false));
+  Object.values(RESTAURANTS).forEach(r => {
+    r.all.forEach(it => add(it, "dish", r.name, false));
+    r.drinks.forEach(it => add(it, "drink", r.name, false));
+    r.desserts.forEach(it => add(it, "dessert", r.name, false));
+  });
+  return out;
+}
+
+function bestMatch(fileName) {
+  const f = normName(fileName.replace(/\.[a-z0-9]+$/i, ""));
+  if (!f) return -1;
+  let best = -1, bestScore = 0;
+  bulkCands.forEach((c, i) => {
+    const names = [normName(c.item.name), normName(c.item.label)].filter(Boolean);
+    let score = 0;
+    names.forEach(n => {
+      if (n === f) score = Math.max(score, 1000);
+      else if (f.length >= 4 && n.includes(f)) score = Math.max(score, 300 + f.length);
+      else if (n.length >= 4 && f.includes(n)) score = Math.max(score, 200 + n.length);
+    });
+    if (score && c.onWheel) score += 50;     // prefer what's on the wheel right now
+    if (score > bestScore) { bestScore = score; best = i; }
+  });
+  return best;
+}
+
+document.getElementById("bulkPhotos").addEventListener("click", () => {
+  if (spinning) return;
+  bulkInput.value = "";
+  bulkInput.click();
+});
+
+bulkInput.addEventListener("change", async () => {
+  const files = [...(bulkInput.files || [])].filter(f => /^image\//.test(f.type));
+  if (!files.length) return;
+  bulkCands = photoCandidates();
+  bulkRows = [];
+  showToast(`Preparing ${files.length} photo${files.length === 1 ? "" : "s"}…`);
+  for (const file of files) {
+    try { bulkRows.push({ file, data: await compressImage(file), match: bestMatch(file.name) }); }
+    catch (e) { /* skip files the browser can't open */ }
+  }
+  renderBulk();
+  try { bulkPop.showModal(); } catch (e) { bulkPop.setAttribute("open", ""); }
+});
+
+function renderBulk() {
+  bulkBody.innerHTML = "";
+  const matched = bulkRows.filter(r => r.match >= 0).length;
+  const p = document.createElement("p");
+  p.className = "bulk-summary";
+  p.textContent = `${matched} of ${bulkRows.length} photo${bulkRows.length === 1 ? "" : "s"} matched by file name. Check the matches and pick an item for any that didn't match.`;
+  bulkBody.appendChild(p);
+  const ul = document.createElement("ul");
+  ul.className = "bulk-list";
+  bulkRows.forEach((row, ri) => {
+    const li = document.createElement("li");
+    li.className = "bulk-item" + (row.match < 0 ? " unmatched" : "");
+    const img = document.createElement("img");
+    img.src = row.data; img.alt = "";
+    const file = document.createElement("span");
+    file.className = "bulk-file";
+    file.textContent = row.file.name;
+    const sel = document.createElement("select");
+    sel.setAttribute("aria-label", `Item for ${row.file.name}`);
+    const skip = document.createElement("option");
+    skip.value = "-1"; skip.textContent = "— Skip this photo —";
+    sel.appendChild(skip);
+    // Group options by where they come from; items on the wheel first
+    const groups = new Map();
+    bulkCands.forEach((c, i) => {
+      if (!c.onWheel && i !== row.match) return;   // keep the list short: wheel items plus the match
+      const g = c.onWheel ? "On the wheel now" : c.where;
+      if (!groups.has(g)) groups.set(g, []);
+      groups.get(g).push([i, c]);
+    });
+    groups.forEach((list, label) => {
+      const og = document.createElement("optgroup");
+      og.label = label;
+      list.forEach(([i, c]) => {
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = `${KIND_ICON[c.ring] || ""} ${c.item.name}${c.onWheel ? "" : ` (${c.where})`}`;
+        og.appendChild(o);
+      });
+      sel.appendChild(og);
+    });
+    sel.value = String(row.match);
+    sel.addEventListener("change", () => { row.match = Number(sel.value); li.classList.toggle("unmatched", row.match < 0); });
+    li.append(img, file, sel);
+    ul.appendChild(li);
+  });
+  bulkBody.appendChild(ul);
+}
+
+function closeBulk() { if (bulkPop.open) bulkPop.close(); }
+document.getElementById("bulkClose").addEventListener("click", closeBulk);
+document.getElementById("bulkCancel").addEventListener("click", closeBulk);
+bulkPop.addEventListener("click", e => { if (e.target === bulkPop) closeBulk(); });
+
+document.getElementById("bulkSave").addEventListener("click", () => {
+  const chosen = bulkRows.filter(r => r.match >= 0);
+  if (!chosen.length) { closeBulk(); return; }
+  const before = {};
+  chosen.forEach(r => { const k = bulkCands[r.match].key; before[k] = PHOTOS[k]; PHOTOS[k] = r.data; });
+  if (!savePhotos()) {
+    Object.entries(before).forEach(([k, v]) => { if (v) PHOTOS[k] = v; else delete PHOTOS[k]; });
+    savePhotos();
+    closeBulk();
+    photoChanged("Your browser storage is full, so the photos weren't saved. Remove a few photos or add fewer at once.", true);
+    return;
+  }
+  closeBulk();
+  const n = new Set(chosen.map(r => bulkCands[r.match].key)).size;
+  photoChanged(`Added ${n} photo${n === 1 ? "" : "s"}.`);
+  showToast(`Added ${n} photo${n === 1 ? "" : "s"}`);
+  slotSig = "";
+  if (gameStyle === "slots") renderSlotsIdle();
+});
+
 // ---------- Recipe panel ----------
 const recipeEl = document.getElementById("recipe");
 const recipeTitle = document.getElementById("recipeTitle");
@@ -2378,11 +3542,13 @@ let sampleApi = null;
 samplePromise.then(s => { sampleApi = s; if (shownRecipe && !getRecipe(shownRecipe.item)) renderRecipe(); });
 
 function hideRecipe() {
+  planItem = null;
   shownRecipe = null;
   recipeEl.hidden = true;
 }
 
 function showRecipe(mealKey, index, viewMode) {
+  planItem = null;
   const item = DATA[mealKey][index];
   if (!item) return;
   shownRecipe = { meal: mealKey, item, generating: false, mode: viewMode || "cook" };
@@ -2473,7 +3639,7 @@ function showJollibeePlan(item) {
   recipeEl.hidden = false;
   const r = RESTAURANTS[item.rest];
   recipeTitle.textContent = `${r.name}: ${item.name}`;
-  recipeMeta.textContent = `${item.priceText} on the Philippine menu`;
+  recipeMeta.textContent = r.noPrices ? `From the ${r.name} ${r.country ? r.country + " " : ""}menu` : `${item.priceText} on the Philippine menu`;
   recipeBody.innerHTML = "";
   const box = document.createElement("div");
   box.className = "plan";
@@ -2481,22 +3647,40 @@ function showJollibeePlan(item) {
   p1.textContent = `${item.description}${/[.!?]$/.test(item.description) ? "" : "."} ${r.orderHow}`;
   const p2 = document.createElement("p");
   p2.className = "note";
-  p2.textContent = `Prices are from the ${r.menuSource}. Branches outside the Philippines have their own prices and may not carry every item.`;
+  p2.textContent = r.noPrices
+    ? `The menu file doesn't include prices, so check the ${r.name} app or the menu board. Items can vary by restaurant and time of day.`
+    : `Prices are from the ${r.menuSource}. Branches outside the Philippines have their own prices and may not carry every item.`;
+  // Links for this restaurant first, then for every other restaurant already in the cart
+  const restKeys = [r.key].concat(PLACE_ORDER.filter(k => RESTAURANTS[k] && k !== r.key && cart.some(l => l.place === k)));
   const actions = document.createElement("div");
-  actions.className = "plan-actions";
-  const a1 = document.createElement("a");
-  a1.className = "btn";
-  a1.href = `https://www.google.com/maps/search/${encodeURIComponent(r.key === "maxs" ? "Max's Restaurant" : r.name)}+near+me`;
-  a1.target = "_blank";
-  a1.rel = "noopener noreferrer";
-  a1.textContent = `Find the nearest ${r.name}`;
-  const a2 = document.createElement("a");
-  a2.className = "btn quiet";
-  a2.href = `https://www.google.com/search?q=${encodeURIComponent(r.key === "maxs" ? "Max's Restaurant" : r.name)}+delivery+near+me`;
-  a2.target = "_blank";
-  a2.rel = "noopener noreferrer";
-  a2.textContent = `${r.name} delivery`;
-  actions.append(a1, a2);
+  actions.className = "plan-links";
+  restKeys.forEach((k, i) => {
+    const rr = RESTAURANTS[k];
+    const q = encodeURIComponent(k === "maxs" ? "Max's Restaurant" : rr.searchName || rr.name);
+    if (i === 1) {
+      const lab = document.createElement("p");
+      lab.className = "plan-links-label";
+      lab.textContent = "Also in your cart";
+      actions.appendChild(lab);
+    }
+    const row = document.createElement("div");
+    row.className = "plan-actions";
+    const a1 = document.createElement("a");
+    a1.className = i === 0 ? "btn" : "btn quiet";
+    a1.href = `https://www.google.com/maps/search/${q}+near+me`;
+    a1.target = "_blank";
+    a1.rel = "noopener noreferrer";
+    a1.textContent = `${rr.icon} Find the nearest ${rr.name}`;
+    const a2 = document.createElement("a");
+    a2.className = "btn quiet";
+    a2.href = `https://www.google.com/search?q=${q}+delivery+near+me`;
+    a2.target = "_blank";
+    a2.rel = "noopener noreferrer";
+    a2.textContent = `${rr.name} delivery`;
+    row.append(a1, a2);
+    actions.appendChild(row);
+  });
+  planItem = item;
   box.append(p1, p2, actions);
   recipeBody.appendChild(box);
 }
@@ -2678,7 +3862,16 @@ function renderMenuList() {
         photoInput.value = "";
         photoInput.click();
       });
-      li.append(btn, pb);
+      const cb = document.createElement("button");
+      cb.type = "button";
+      cb.className = "cart-mini";
+      cb.textContent = "🛒";
+      cb.title = "Add to cart";
+      cb.setAttribute("aria-label", `Add ${item.name} to cart`);
+      cb.addEventListener("click", () => {
+        addToCart([{ item, kind: ring, place: placeFor(item, ["cook", "eatout", "order"].includes(mode) ? mode : "cook") }]);
+      });
+      li.append(btn, cb, pb);
       if (has) {
         const rb = document.createElement("button");
         rb.type = "button";
@@ -2940,9 +4133,20 @@ fileInput.addEventListener("change", () => {
   reader.readAsText(file);
 });
 
-document.getElementById("resetMenu").addEventListener("click", () => {
+let resetArmed = 0;
+document.getElementById("resetMenu").addEventListener("click", e => {
   if (spinning) return;
-  if (!confirm("Reset the wheel to the original 20 dishes? Dishes you added will be removed.")) return;
+  const btn = e.currentTarget;
+  // First tap asks, second tap within a few seconds confirms
+  if (!resetArmed) {
+    btn.textContent = "Tap again to reset";
+    setStatus("This puts back the original 20 dishes and removes the ones you added. Tap Reset again to confirm.", true);
+    resetArmed = setTimeout(() => { resetArmed = 0; btn.textContent = "Reset to original"; setStatus(""); }, 5000);
+    return;
+  }
+  clearTimeout(resetArmed);
+  resetArmed = 0;
+  btn.textContent = "Reset to original";
   DATA = clone(DEFAULT_DATA);
   persist();
   hideRecipe();
@@ -2956,6 +4160,7 @@ selectMeal(meal);
 selectMode(mode);
 applySource();
 resize();
+applyGameStyle();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
 </script>
 </body>
