@@ -1,0 +1,4 @@
+# Secrets - never push these to GitHub
+.env
+.env.local
+.env.*.local
