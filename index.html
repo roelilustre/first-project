@@ -1188,7 +1188,8 @@
     <div id="recipeBody"></div>
   </section>
 
-  <section class="editor" id="editor" aria-labelledby="editorTitle">
+  <!-- "Your menu" editor: switched off for now and kept here so it can be turned back on later -->
+  <section class="editor" id="editor" aria-labelledby="editorTitle" hidden>
     <h2 id="editorTitle">Your menu</h2>
     <p>Add your own dishes to the wheel. Your changes stay in this browser. Save them as a JSON file to keep a copy, or load a JSON file you saved before.</p>
 
@@ -2349,7 +2350,7 @@ function applySource() {
   document.getElementById("mealsLabel").hidden = !!jb;
   mealsEl.hidden = !!jb;
   autoRow.hidden = !!jb;
-  document.getElementById("editor").hidden = !!jb;
+  document.getElementById("editor").hidden = !EDITOR_ENABLED || !!jb;
   markPressed(placesEl, place);
   if (r && catsBuiltFor !== r.key) {
     // New restaurant: rebuild its category buttons and start from a fresh mix
@@ -2545,9 +2546,9 @@ function draw() {
   ctx.fill();
 
   const W = winners || {};
-  drawRing(items, rotation, bands.dish, SEGMENTS, "radial", "Add a dish below", W.dish);
-  drawRing(drinks, rotDrink, bands.drink, DRINK_COLORS, "arc", "Add drinks below", W.drink);
-  drawRing(desserts, rotDessert, bands.dessert, DESSERT_COLORS, "arc", "Add desserts below", W.dessert);
+  drawRing(items, rotation, bands.dish, SEGMENTS, "radial", "No dishes yet", W.dish);
+  drawRing(drinks, rotDrink, bands.drink, DRINK_COLORS, "arc", "No drinks yet", W.drink);
+  drawRing(desserts, rotDessert, bands.dessert, DESSERT_COLORS, "arc", "No desserts yet", W.dessert);
   // Outline the three winning wedges after the drawing so the glow sits on top
   if (winners) highlights.forEach(h => {
     ctx.save();
@@ -2686,8 +2687,7 @@ function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
 function spin() {
   if (spinning) return;
   if (!currentItems().length) {
-    setStatus("Add at least one dish to this time of day before spinning.", true);
-    document.getElementById("newName").focus();
+    showToast("There are no dishes for this time of day yet. Try another time of day.");
     return;
   }
   spinning = true;
@@ -3887,6 +3887,9 @@ document.getElementById("bulkSave").addEventListener("click", () => {
   if (gameStyle === "slots") renderSlotsIdle();
 });
 
+// Set to true to bring back the "Your menu" editor (add dishes, save/load JSON, reset)
+const EDITOR_ENABLED = false;
+
 // ---------- Show or hide the "On the wheel" list ----------
 const LIST_KEY = "kain-na-list-hidden";
 const menuToggle = document.getElementById("menuToggle");
@@ -3944,7 +3947,7 @@ function renderRecipe(errorMsg) {
     } else {
       p.textContent = errorMsg || (sampleApi
         ? `There's no recipe for ${item.name} yet. Claude can write one for you, and it will be saved with the dish.`
-        : `There's no recipe for ${item.name} yet. Remove the dish and add it again with ingredients and steps to include one.`);
+        : `There's no recipe for ${item.name} yet.`);
       box.appendChild(p);
       if (sampleApi) {
         const btn = document.createElement("button");
@@ -4172,9 +4175,9 @@ function renderMenuList() {
     ? `On the wheel: ${rr.name} ${jbCat === "mix" ? "mix" : rr.categories[Number(jbCat)].label}`
     : `On the wheel: ${MEALS.find(m => m.key === meal).label}`;
 
-  fillList(menuListEl, items, "dish", wonName, "Nothing in this ring yet. Add a dish in Your menu below.");
-  fillList(document.getElementById("drinkList"), drinks, "drink", ringPicks.drink && ringPicks.drink.name, "No drinks yet. Add some in Your menu below.");
-  fillList(document.getElementById("dessertList"), desserts, "dessert", ringPicks.dessert && ringPicks.dessert.name, "No desserts yet. Add some in Your menu below.");
+  fillList(menuListEl, items, "dish", wonName, "Nothing in this ring yet.");
+  fillList(document.getElementById("drinkList"), drinks, "drink", ringPicks.drink && ringPicks.drink.name, "No drinks yet.");
+  fillList(document.getElementById("dessertList"), desserts, "dessert", ringPicks.dessert && ringPicks.dessert.name, "No desserts yet.");
 
   function fillList(ul, list, ring, won, emptyText) {
     ul.innerHTML = "";
