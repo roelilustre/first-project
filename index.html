@@ -786,6 +786,52 @@
   #menuContent { margin-top: 8px; }
   @media (prefers-reduced-motion: reduce) { .menu-toggle .chev { transition: none; } }
 
+  /* ---------- Extras: challenge, no repeats, favourites ---------- */
+  .extras { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+  .extra-btn {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+    font: 800 .95rem "Nunito", system-ui, sans-serif; color: #FFFFFF; text-align: left;
+    background: rgba(255,255,255,.08); border: 2px dashed rgba(255,255,255,.7); border-radius: 999px;
+    padding: 8px 14px; min-height: 42px; cursor: pointer;
+  }
+  .extra-btn[aria-pressed="true"] { background: var(--chili); border: 2px solid #FFFFFF; }
+  .extra-btn[aria-pressed="true"]::after { content: "ON"; margin-left: auto; font-size: .75rem; background: #FFFFFF; color: var(--chili); border-radius: 999px; padding: 1px 8px; }
+  .extra-btn:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+  .extra-btn:disabled { opacity: .55; cursor: not-allowed; }
+  .extra-note { margin: 2px 0 0; font-size: .8rem; line-height: 1.35; color: var(--on-bg-muted); }
+  @media (max-width: 700px) {
+    .extras { display: grid; grid-template-columns: 1fr 1fr; }
+    .extra-note { grid-column: 1 / -1; }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .extra-btn { font-size: .82rem; min-height: 36px; padding: 5px 10px; }
+  }
+  .pref-btn {
+    flex: none; min-width: 36px; min-height: 36px; border: 0; border-radius: 8px; background: none;
+    font-size: 1.1rem; line-height: 1; cursor: pointer; color: #9AA3C7;
+  }
+  .pref-btn.fav.on { color: var(--chili); }
+  .pref-btn.ban { filter: grayscale(1); opacity: .45; font-size: .95rem; }
+  .pref-btn.ban.on { filter: none; opacity: 1; }
+  .pref-btn:focus-visible { outline: 3px solid var(--chili); outline-offset: 1px; }
+  .pref-btn:disabled { cursor: not-allowed; }
+  .menu-list li.banned { opacity: .6; }
+  .menu-list li.banned .mi-name { text-decoration: line-through; }
+  @media (pointer: coarse) { .pref-btn { min-width: 40px; min-height: 40px; } }
+
+  .challenge {
+    margin-top: 14px; padding: 12px 14px; border-radius: 14px;
+    background: linear-gradient(135deg, #E2231A, #F7931E); color: #FFFFFF;
+    border: 2px solid #0B154A; box-shadow: 0 3px 0 #0B154A;
+  }
+  .challenge .ch-kicker { display: block; font: 400 1rem "Bangers", "Arial Black", sans-serif; letter-spacing: .06em; color: #FFE45C; }
+  .challenge .ch-text { display: block; font-weight: 800; font-size: 1.05rem; line-height: 1.3; }
+  .pop-body .challenge { animation: chFlip .7s cubic-bezier(.2,1.4,.4,1) .35s both; }
+  @keyframes chFlip { from { opacity: 0; transform: perspective(500px) rotateX(-90deg); } to { opacity: 1; transform: none; } }
+  .share-btn { background: #1F4FB5; color: #FFFFFF; }
+  .share-pop #shareImg { display: block; width: 100%; max-width: 360px; margin: 0 auto; border-radius: 14px; border: 2px solid #0B154A; aspect-ratio: 4 / 5; background: #1B34A8; }
+  @media (prefers-reduced-motion: reduce) { .pop-body .challenge { animation: none; } }
+
   /* ---------- Bulk photos ---------- */
   .bulk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; }
   .bulk-tip { color: var(--on-bg-muted); font-size: .9rem; max-width: 60ch; }
@@ -1072,6 +1118,13 @@
 
       <p class="group-label" id="jbLabel" hidden>Jollibee menu</p>
       <div class="meals" id="jbCats" role="group" aria-labelledby="jbLabel" hidden></div>
+
+      <p class="group-label" id="extrasLabel">✨ Extras</p>
+      <div class="extras" role="group" aria-labelledby="extrasLabel">
+        <button class="extra-btn" id="challengeToggle" type="button" aria-pressed="false">🔥 Bakbak Challenge</button>
+        <button class="extra-btn" id="repeatToggle" type="button" aria-pressed="false">🔁 No repeats</button>
+        <p class="extra-note">♥ in the list makes an item come up more often. 🚫 takes it off the wheel.</p>
+      </div>
     </div>
 
     <div class="wheel-col">
@@ -1125,6 +1178,7 @@
           <p class="desc" id="resultDesc">Hit Spin in the middle of the wheel to get your pick.</p>
           <p class="price" id="resultPrice" hidden></p>
           <div class="pairings" id="pairings" hidden></div>
+          <div class="challenge" id="resultChallenge" hidden></div>
           <button class="btn again-btn" id="againBtn" type="button" hidden>🎡 Spin again</button>
         </div>
       </div>
@@ -1240,8 +1294,23 @@
   <div class="pop-body" id="popBody"></div>
   <div class="pop-actions">
     <button class="btn cart-add" id="popAddCart" type="button">🛒 Add to cart</button>
+    <button class="btn share-btn" id="popShare" type="button">📸 Share</button>
     <button class="btn quiet" id="popAgain" type="button">🎡 Spin again</button>
     <button class="btn quiet" id="popDetails" type="button">See details</button>
+  </div>
+</dialog>
+
+<dialog class="result-pop share-pop" id="sharePop" aria-labelledby="shareTitle">
+  <div class="pop-ribbon"><span id="shareTitle">📸 Share your pick</span></div>
+  <button class="pop-close" id="shareClose" type="button" aria-label="Close">✕</button>
+  <div class="pop-body">
+    <img id="shareImg" alt="Picture of your pick with the Uno and Zac Eats logo">
+    <p class="cart-note" id="shareStatus" role="status"></p>
+  </div>
+  <div class="pop-actions">
+    <button class="btn cart-add" id="shareNative" type="button" hidden>📤 Share</button>
+    <button class="btn" id="shareSave" type="button">💾 Save image</button>
+    <button class="btn quiet" id="shareDone" type="button">Done</button>
   </div>
 </dialog>
 
@@ -2384,6 +2453,7 @@ function resetResult(prompt, hint) {
   priceEl.hidden = true;
   resultArt.hidden = true;
   pairingsEl.hidden = true;
+  if (typeof challengeEl !== "undefined") challengeEl.hidden = true;
   ringPicks = { drink: null, dessert: null };
   winners = null;
   againBtn.hidden = true;
@@ -2529,9 +2599,7 @@ function draw() {
   const size = canvas.getBoundingClientRect().width;
   if (gameStyle === "slots") renderSlotsIdle();
   if (!size) { renderMenuList(); return; }
-  const items = currentItems();
-  const drinks = currentDrinks();
-  const desserts = currentDesserts();
+  const [items, drinks, desserts] = playLists();
   renderMenuList();
   const cx = size / 2, cy = size / 2;
   const R = size / 2 - 8;
@@ -2686,8 +2754,8 @@ function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
 
 function spin() {
   if (spinning) return;
-  if (!currentItems().length) {
-    showToast("There are no dishes for this time of day yet. Try another time of day.");
+  if (!playLists()[0].length) {
+    showToast(currentItems().length ? "Every dish here is marked 🚫. Un-hide one in the list to spin." : "There are no dishes for this time of day yet. Try another time of day.");
     return;
   }
   spinning = true;
@@ -2699,6 +2767,8 @@ function spin() {
   mealsEl.querySelectorAll(".meal").forEach(b => b.disabled = true);
   dishList.querySelectorAll(".remove").forEach(b => b.disabled = true);
   [modesEl, placesEl, jbCatsEl].forEach(el => el.querySelectorAll(".meal").forEach(b => b.disabled = true));
+  document.querySelectorAll(".extra-btn").forEach(b => b.disabled = true);
+  challengeEl.hidden = true;
   priceEl.hidden = true;
   pairingsEl.hidden = true;
   resultArt.hidden = true;
@@ -2716,7 +2786,7 @@ function spin() {
   if (gameStyle === "slots") { runSlots(); return; }
 
   const TAU = Math.PI * 2;
-  const lists = [currentItems(), currentDrinks(), currentDesserts()];
+  const lists = playLists();
   const starts = [rotation, rotDrink, rotDessert];
   const dirs = [1, -1, 1];                 // neighbouring rings turn opposite ways
   const durations = reduceMotion ? [500, 500, 500] : [5200, 4500, 3800]; // outer stops first, dish last
@@ -2725,7 +2795,7 @@ function spin() {
     const n = list.length;
     if (!n) { picks[k] = -1; return starts[k]; }
     const seg = TAU / n;
-    const pick = Math.floor(Math.random() * n);
+    const pick = weightedPick(list, k);
     picks[k] = pick;
     const jitter = (Math.random() - 0.5) * seg * 0.6;
     const desired = ((TAU - (pick + 0.5) * seg + jitter) % TAU + TAU) % TAU;
@@ -2791,8 +2861,12 @@ function updateResultTag() {
   tagEl.textContent = `Your ${m.label.toLowerCase()} pick, ${md.phrase} ${md.icon}`;
 }
 
-function finish(i) {
-  if (restKey()) { finishJollibee(currentItems()[i]); return; }
+function finish(fi) {
+  const picked0 = playLists()[0][fi];
+  rememberPick(picked0);
+  pickChallenge();
+  if (restKey()) { finishJollibee(picked0); return; }
+  const i = DATA[meal].indexOf(picked0);
   const item = DATA[meal][i];
   const m = MEALS.find(x => x.key === meal);
   playWin();
@@ -2900,6 +2974,7 @@ function endSpin() {
   mealsEl.querySelectorAll(".meal").forEach(b => b.disabled = false);
   dishList.querySelectorAll(".remove").forEach(b => b.disabled = false);
   [modesEl, placesEl, jbCatsEl].forEach(el => el.querySelectorAll(".meal").forEach(b => b.disabled = false));
+  document.querySelectorAll(".extra-btn").forEach(b => b.disabled = false);
 }
 
 
@@ -3168,7 +3243,7 @@ document.querySelector(".game-switch").addEventListener("keydown", e => {
   next.click(); next.focus(); e.preventDefault();
 });
 
-function reelLists() { return [currentItems(), currentDrinks(), currentDesserts()]; }
+function reelLists() { return playLists(); }
 // Measure the real row height (the CSS size can be a clamp() that changes with the screen)
 function cellPx(reel) { return reel.clientHeight / 3 || 96; }
 
@@ -3210,7 +3285,7 @@ function park(reel, rowIndex) {
 function renderSlotsIdle() {
   if (gameStyle !== "slots" || spinning) return;
   const lists = reelLists();
-  const sig = lists.map(l => l.map(x => x.name).join("|")).join("§") + photosVersion + (winners ? JSON.stringify(winners) : "");
+  const sig = lists.map(l => l.map(x => x.name).join("|")).join("§") + photosVersion + "|" + prefsVersion + (winners ? JSON.stringify(winners) : "");
   if (sig === slotSig) return;
   slotSig = sig;
   const h = cellPx(reels[0]);
@@ -3226,7 +3301,7 @@ function renderSlotsIdle() {
 
 function runSlots() {
   const lists = reelLists();
-  const picks = lists.map(l => l.length ? Math.floor(Math.random() * l.length) : -1);
+  const picks = lists.map((l, k) => l.length ? weightedPick(l, k) : -1);
   slotWrap.classList.add("running");
   slotSpinBtn.disabled = true;
   leverBtn.disabled = true;
@@ -3903,6 +3978,307 @@ function setListHidden(hidden, save) {
 menuToggle.addEventListener("click", () => setListHidden(!menuContent.hidden, true));
 try { setListHidden(localStorage.getItem(LIST_KEY) === "1", false); } catch (e) {}
 
+// ---------- Extras: favourites (♥), off the wheel (🚫), no repeats, Bakbak Challenge ----------
+const PREFS_KEY = "kain-na-prefs";
+let prefs = { fav: {}, ban: {}, recent: [], noRepeat: false, challenge: false };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || "{}")); } catch (e) {}
+prefs.fav = prefs.fav || {};
+prefs.ban = prefs.ban || {};
+prefs.recent = Array.isArray(prefs.recent) ? prefs.recent : [];
+let prefsVersion = 0;
+function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (e) {} }
+const prefKey = it => photoKey(it, !!it.rest);
+const recentKey = it => (it.rest || "home") + ":" + it.name;
+
+// What actually goes on the wheel and reels: everything except items marked 🚫
+function playLists() {
+  const keep = l => l.filter(it => !prefs.ban[prefKey(it)]);
+  return [keep(currentItems()), keep(currentDrinks()), keep(currentDesserts())];
+}
+
+// Favourites are 3× as likely; with No repeats on, recent dishes are skipped
+function weightedPick(list, ring) {
+  const recent = prefs.noRepeat && ring === 0 ? prefs.recent.slice(0, Math.min(5, list.length - 1)) : [];
+  const w = list.map(it => (recent.includes(recentKey(it)) ? 0 : prefs.fav[prefKey(it)] ? 3 : 1));
+  const total = w.reduce((a, b) => a + b, 0);
+  if (!total) return Math.floor(Math.random() * list.length);
+  let r = Math.random() * total;
+  for (let i = 0; i < list.length; i++) { r -= w[i]; if (r < 0) return i; }
+  return list.length - 1;
+}
+function rememberPick(it) {
+  if (!it) return;
+  const k = recentKey(it);
+  prefs.recent = [k, ...prefs.recent.filter(x => x !== k)].slice(0, 5);
+  savePrefs();
+}
+
+function togglePref(type, key, name) {
+  if (spinning) return;
+  const on = !prefs[type][key];
+  if (on) prefs[type][key] = true; else delete prefs[type][key];
+  // An item can't be a favourite and off the wheel at the same time
+  const other = type === "fav" ? "ban" : "fav";
+  if (on) delete prefs[other][key];
+  savePrefs();
+  prefsVersion++;
+  winners = null;
+  menuSig = "";
+  slotSig = "";
+  draw();
+  if (type === "fav") showToast(on ? `♥ ${name} will come up more often` : `${name} is no longer a favourite`);
+  else showToast(on ? `🚫 ${name} is off the wheel` : `${name} is back on the wheel`);
+}
+
+const challengeToggle = document.getElementById("challengeToggle");
+const repeatToggle = document.getElementById("repeatToggle");
+function updateExtrasUI() {
+  challengeToggle.setAttribute("aria-pressed", String(!!prefs.challenge));
+  repeatToggle.setAttribute("aria-pressed", String(!!prefs.noRepeat));
+  repeatToggle.title = "Skips the dishes you got in your last few spins";
+  challengeToggle.title = "Adds a fun dare to every pick";
+}
+challengeToggle.addEventListener("click", () => {
+  if (spinning) return;
+  prefs.challenge = !prefs.challenge;
+  savePrefs(); updateExtrasUI();
+  showToast(prefs.challenge ? "🔥 Bakbak Challenge on: every pick comes with a fun dare" : "Bakbak Challenge off");
+});
+repeatToggle.addEventListener("click", () => {
+  if (spinning) return;
+  prefs.noRepeat = !prefs.noRepeat;
+  savePrefs(); updateExtrasUI();
+  showToast(prefs.noRepeat ? "🔁 No repeats on: your last 5 dishes are skipped" : "No repeats off");
+});
+
+const CHALLENGES = [
+  "Eat it kamayan style, with your hands 🙌",
+  "Add a cup of extra rice 🍚",
+  "Rate it out of 10 on camera 🎥",
+  "Take the first bite with your eyes closed 😌",
+  "Share one bite with someone next to you 🤝",
+  "Describe the taste in one word only 🗣️",
+  "Shout \"Bakbak na!\" before the first bite 📣",
+  "Phones down until your plate is clean 📵",
+  "Try it with a sauce or dip you've never used 🥫",
+  "Eat it with chopsticks 🥢",
+  "Film a slow-mo first bite 🎬",
+  "Swap one item with a friend 🔄",
+  "Do your best \"sarap!\" face after the first bite 😋",
+  "Pick a song and eat to the beat 🎵",
+  "Guess what it costs before you check 💸",
+  "Add something spicy, if you like heat 🌶️",
+  "Take a food selfie before eating 🤳",
+  "Leave a clean plate, no leftovers ✨",
+  "Give it a dramatic food-critic review 🧐",
+  "Eat your dessert first 🍮"
+];
+const challengeEl = document.getElementById("resultChallenge");
+let currentChallenge = null, lastChallenge = null;
+function pickChallenge() {
+  currentChallenge = null;
+  challengeEl.hidden = true;
+  if (!prefs.challenge) return;
+  let c;
+  do { c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)]; } while (c === lastChallenge);
+  currentChallenge = lastChallenge = c;
+  challengeEl.innerHTML = '<span class="ch-kicker">🔥 Bakbak Challenge</span><span class="ch-text"></span>';
+  challengeEl.querySelector(".ch-text").textContent = c;
+  challengeEl.hidden = false;
+}
+
+// ---------- Share card: a branded picture of the pick ----------
+const sharePop = document.getElementById("sharePop");
+const shareImg = document.getElementById("shareImg");
+const shareStatus = document.getElementById("shareStatus");
+const shareNative = document.getElementById("shareNative");
+let shareBlob = null, shareUrl = null;
+
+function loadImg(src) {
+  return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+}
+function thumbSrc(item, isRest, idx) {
+  const html = thumbHTML(item, isRest, idx);
+  const m = html.match(/^<img src="([^"]+)"/);
+  if (m) return m[1];
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(html);
+}
+function wrapText(c, text, maxW) {
+  const words = String(text).split(" "), lines = [];
+  let line = "";
+  words.forEach(w => {
+    const t = line ? line + " " + w : w;
+    if (c.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+
+async function makeShareCard() {
+  if (!lastPick) return null;
+  const dish = lastPick.jb ? lastPick.item : DATA[lastPick.meal][lastPick.index];
+  if (!dish) return null;
+  const rest = lastPick.jb ? RESTAURANTS[dish.rest] : null;
+  const kicker = rest ? `${rest.name} pick` : `${MEALS.find(m => m.key === lastPick.meal).label} pick`;
+  try { await Promise.all([document.fonts.load('110px "Bangers"'), document.fonts.load('800 40px "Nunito"')]); } catch (e) {}
+
+  const W = 1080, H = 1350;
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const c = cv.getContext("2d");
+  const NAVY = "#13205A", GOLD = "#FFB000", RED = "#E2231A";
+  const display = '"Bangers", "Arial Black", Impact, sans-serif';
+  const body = '"Nunito", system-ui, sans-serif';
+
+  // Background: brand blue with a bright centre and comic dots
+  const g = c.createRadialGradient(W / 2, 220, 60, W / 2, 500, 1100);
+  g.addColorStop(0, "#3A63E0"); g.addColorStop(.5, "#1B34A8"); g.addColorStop(1, "#0B1A63");
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = "rgba(255,255,255,.06)";
+  for (let y = 10; y < H; y += 26) for (let x = (y / 26) % 2 ? 23 : 10; x < W; x += 26) { c.beginPath(); c.arc(x, y, 3, 0, Math.PI * 2); c.fill(); }
+
+  // Logo in the top-left corner, title centred
+  const logo = await loadImg(document.querySelector(".logo").src);
+  if (logo) {
+    const r = 92, lx = 60 + r, ly = 56 + r;
+    c.fillStyle = NAVY; c.beginPath(); c.arc(lx, ly + 8, r + 14, 0, Math.PI * 2); c.fill();
+    c.fillStyle = GOLD; c.beginPath(); c.arc(lx, ly, r + 14, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#FFFFFF"; c.beginPath(); c.arc(lx, ly, r + 6, 0, Math.PI * 2); c.fill();
+    c.save(); c.beginPath(); c.arc(lx, ly, r, 0, Math.PI * 2); c.clip(); c.drawImage(logo, lx - r, ly - r, r * 2, r * 2); c.restore();
+  }
+  c.textAlign = "center"; c.textBaseline = "alphabetic";
+  c.font = `96px ${display}`;
+  const tg = c.createLinearGradient(0, 90, 0, 190);
+  tg.addColorStop(0, "#FFE45C"); tg.addColorStop(.5, GOLD); tg.addColorStop(1, "#F2611B");
+  c.lineJoin = "round"; c.lineWidth = 10; c.strokeStyle = NAVY;
+  c.strokeText("UNO AND ZAC", W / 2 + 90, 150); c.fillStyle = tg; c.fillText("UNO AND ZAC", W / 2 + 90, 150);
+  c.strokeText("EATS", W / 2 + 90, 245); c.fillText("EATS", W / 2 + 90, 245);
+
+  // "Bakbak na!" banner
+  c.save(); c.translate(W / 2 + 90, 300); c.rotate(-0.05);
+  c.font = `54px ${display}`;
+  const bw = c.measureText("BAKBAK NA!").width + 70;
+  c.fillStyle = GOLD; roundRect(c, -bw / 2 + 8, -44 + 8, bw, 74, 14); c.fill();
+  c.fillStyle = RED; roundRect(c, -bw / 2, -44, bw, 74, 14); c.fill();
+  c.lineWidth = 5; c.strokeStyle = NAVY; c.stroke();
+  c.fillStyle = "#FFFFFF"; c.fillText("BAKBAK NA!", 0, 12);
+  c.restore();
+
+  // Main card
+  const cx = 70, cy = 380, cw = W - 140, ch = currentChallenge ? 780 : 840;
+  c.fillStyle = "#0B154A"; roundRect(c, cx, cy + 12, cw, ch, 36); c.fill();
+  c.fillStyle = "#FFFFFF"; roundRect(c, cx, cy, cw, ch, 36); c.fill();
+  c.lineWidth = 6; c.strokeStyle = "#0B154A"; c.stroke();
+
+  c.fillStyle = "#D35400"; c.font = `800 40px ${body}`;
+  c.fillText(`🎉 Today's ${kicker}`, W / 2, cy + 76);
+
+  const dImg = await loadImg(thumbSrc(dish, !!dish.rest, 0));
+  const ds = 300, dx = W / 2 - ds / 2, dy = cy + 110;
+  c.save(); roundRect(c, dx, dy, ds, ds, 34); c.clip();
+  if (dImg) c.drawImage(dImg, dx, dy, ds, ds);
+  c.restore();
+  c.lineWidth = 6; c.strokeStyle = NAVY; roundRect(c, dx, dy, ds, ds, 34); c.stroke();
+
+  c.fillStyle = "#1F4FB5"; c.font = `86px ${display}`;
+  const nameLines = wrapText(c, dish.name.toUpperCase(), cw - 100).slice(0, 2);
+  nameLines.forEach((ln, i) => c.fillText(ln, W / 2, dy + ds + 100 + i * 84));
+  let yy = dy + ds + 100 + (nameLines.length - 1) * 84;
+  if (dish.priceText) {
+    c.font = `800 40px ${body}`;
+    const pw = c.measureText(dish.priceText).width + 50;
+    c.fillStyle = RED; roundRect(c, W / 2 - pw / 2, yy + 26, pw, 60, 30); c.fill();
+    c.fillStyle = "#FFFFFF"; c.fillText(dish.priceText, W / 2, yy + 70);
+    yy += 76;
+  }
+
+  // Drink and dessert side by side
+  const pairs = [["🥤 DRINK", ringPicks.drink, 1], ["🍮 DESSERT", ringPicks.dessert, 3]].filter(p => p[1]);
+  const colW = (cw - 80) / Math.max(pairs.length, 1);
+  for (let i = 0; i < pairs.length; i++) {
+    const [label, it, idx] = pairs[i];
+    const px = cx + 40 + colW * i, py = yy + 60;
+    const im = await loadImg(thumbSrc(it, !!it.rest, idx));
+    c.save(); roundRect(c, px, py, 110, 110, 20); c.clip(); if (im) c.drawImage(im, px, py, 110, 110); c.restore();
+    c.lineWidth = 4; c.strokeStyle = NAVY; roundRect(c, px, py, 110, 110, 20); c.stroke();
+    c.textAlign = "left";
+    c.fillStyle = "#55618A"; c.font = `800 26px ${body}`; c.fillText(label, px + 130, py + 34);
+    c.fillStyle = NAVY; c.font = `800 34px ${body}`;
+    wrapText(c, it.name, colW - 150).slice(0, 2).forEach((ln, j) => c.fillText(ln, px + 130, py + 76 + j * 38));
+    c.textAlign = "center";
+  }
+
+  // Challenge strip
+  if (currentChallenge) {
+    const sy = cy + ch + 28, sh = 142;
+    const sg = c.createLinearGradient(cx, 0, cx + cw, 0);
+    sg.addColorStop(0, RED); sg.addColorStop(1, "#F7931E");
+    c.fillStyle = "#0B154A"; roundRect(c, cx, sy + 8, cw, sh, 28); c.fill();
+    c.fillStyle = sg; roundRect(c, cx, sy, cw, sh, 28); c.fill();
+    c.lineWidth = 5; c.strokeStyle = "#0B154A"; c.stroke();
+    c.fillStyle = "#FFE45C"; c.font = `40px ${display}`; c.fillText("🔥 BAKBAK CHALLENGE", W / 2, sy + 52);
+    c.fillStyle = "#FFFFFF"; c.font = `800 36px ${body}`;
+    wrapText(c, currentChallenge, cw - 80).slice(0, 2).forEach((ln, i) => c.fillText(ln, W / 2, sy + 94 + i * 38));
+  } else {
+    c.fillStyle = "rgba(255,255,255,.85)"; c.font = `800 32px ${body}`;
+    c.fillText("Spun on the Uno and Zac Eats food roulette 🎡", W / 2, H - 70);
+  }
+
+  return new Promise(res => cv.toBlob(b => res(b), "image/png"));
+}
+
+document.getElementById("popShare").addEventListener("click", async () => {
+  closeResultPopup();
+  shareStatus.textContent = "Making your picture…";
+  shareNative.hidden = true;
+  shareImg.removeAttribute("src");
+  try { sharePop.showModal(); } catch (e) { sharePop.setAttribute("open", ""); }
+  shareBlob = await makeShareCard();
+  if (!shareBlob) { shareStatus.textContent = "Couldn't make the picture. Try spinning again."; return; }
+  if (shareUrl) URL.revokeObjectURL(shareUrl);
+  shareUrl = URL.createObjectURL(shareBlob);
+  shareImg.src = shareUrl;
+  shareStatus.textContent = "Save it, then post it on TikTok, Facebook or Instagram.";
+  try {
+    const file = new File([shareBlob], "uno-and-zac-eats-pick.png", { type: "image/png" });
+    shareNative.hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
+  } catch (e) { shareNative.hidden = true; }
+});
+shareNative.addEventListener("click", async () => {
+  if (!shareBlob) return;
+  try {
+    const file = new File([shareBlob], "uno-and-zac-eats-pick.png", { type: "image/png" });
+    await navigator.share({ files: [file], title: "Uno and Zac Eats", text: "Bakbak na! 🎡" });
+    shareStatus.textContent = "Shared!";
+  } catch (e) {
+    shareStatus.textContent = e && e.name === "AbortError" ? "Share cancelled." : "Sharing isn't available here. Use Save image instead.";
+  }
+});
+document.getElementById("shareSave").addEventListener("click", async () => {
+  if (!shareBlob) return;
+  const filename = "uno-and-zac-eats-pick.png";
+  const downloads = await downloadsPromise;
+  if (downloads) {
+    try { await downloads.save({ filename, data: shareBlob }); shareStatus.textContent = `Saved ${filename}.`; }
+    catch (err) { shareStatus.textContent = err && err.code === "declined" ? "Save cancelled." : "Saving isn't available here."; }
+    return;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = shareUrl; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    shareStatus.textContent = `Saved ${filename}.`;
+  } catch (e) { shareStatus.textContent = "Saving isn't available here."; }
+});
+const closeShare = () => { if (sharePop.open) sharePop.close(); };
+document.getElementById("shareClose").addEventListener("click", closeShare);
+document.getElementById("shareDone").addEventListener("click", closeShare);
+sharePop.addEventListener("click", e => { if (e.target === sharePop) closeShare(); });
+
 // ---------- Recipe panel ----------
 const recipeEl = document.getElementById("recipe");
 const recipeTitle = document.getElementById("recipeTitle");
@@ -4166,7 +4542,7 @@ function renderMenuList() {
   const desserts = currentDesserts();
   const names = l => l.map(x => x.name).join("|");
   const sig = [jb, meal, jbCat, spinning, wonName, ringPicks.drink && ringPicks.drink.name, ringPicks.dessert && ringPicks.dessert.name,
-    photosVersion, names(items), names(drinks), names(desserts)].join("§");
+    photosVersion, prefsVersion, names(items), names(drinks), names(desserts)].join("§");
   if (sig === menuSig) return;
   menuSig = sig;
 
@@ -4226,7 +4602,8 @@ function renderMenuList() {
       pb.type = "button";
       pb.className = "photo-btn";
       pb.disabled = spinning;
-      pb.textContent = has ? "📷 Change" : "📷 Photo";
+      pb.textContent = "📷";
+      pb.title = has ? "Change photo" : "Add a photo";
       pb.setAttribute("aria-label", `${has ? "Change" : "Add"} photo for ${item.name}`);
       pb.addEventListener("click", () => {
         if (spinning) return;
@@ -4243,7 +4620,26 @@ function renderMenuList() {
       cb.addEventListener("click", () => {
         addToCart([{ item, kind: ring, place: placeFor(item, ["cook", "eatout", "order"].includes(mode) ? mode : "cook") }]);
       });
-      li.append(btn, cb, pb);
+      const pkey = photoKey(item, isRest);
+      const fav = !!prefs.fav[pkey], ban = !!prefs.ban[pkey];
+      if (ban) li.classList.add("banned");
+      const fb = document.createElement("button");
+      fb.type = "button"; fb.className = "pref-btn fav" + (fav ? " on" : "");
+      fb.textContent = fav ? "♥" : "♡";
+      fb.setAttribute("aria-pressed", String(fav));
+      fb.setAttribute("aria-label", `Favourite ${item.name}`);
+      fb.title = fav ? "Favourite: comes up more often" : "Make this a favourite";
+      fb.disabled = spinning;
+      fb.addEventListener("click", () => togglePref("fav", pkey, item.name));
+      const bb = document.createElement("button");
+      bb.type = "button"; bb.className = "pref-btn ban" + (ban ? " on" : "");
+      bb.textContent = "🚫";
+      bb.setAttribute("aria-pressed", String(ban));
+      bb.setAttribute("aria-label", `Keep ${item.name} off the wheel`);
+      bb.title = ban ? "Off the wheel. Tap to put it back" : "Take this off the wheel";
+      bb.disabled = spinning;
+      bb.addEventListener("click", () => togglePref("ban", pkey, item.name));
+      li.append(btn, fb, bb, cb, pb);
       if (has) {
         const rb = document.createElement("button");
         rb.type = "button";
@@ -4535,6 +4931,7 @@ applySource();
 resize();
 applyGameStyle();
 updateAutoUI();
+updateExtrasUI();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
 </script>
 </body>
