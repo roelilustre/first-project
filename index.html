@@ -769,6 +769,23 @@
   }
   @media (pointer: coarse) { .auto-btn { min-height: 44px; } }
 
+  /* ---------- Show / hide the "On the wheel" list ---------- */
+  .menu-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; }
+  .menu-head .col-title { margin: 6px 0 2px; }
+  .menu-toggle {
+    display: inline-flex; align-items: center; gap: 8px;
+    font: 800 .95rem "Nunito", system-ui, sans-serif; color: #FFFFFF;
+    background: rgba(255,255,255,.08); border: 2px solid #FFFFFF; border-radius: 999px;
+    padding: 8px 16px; min-height: 44px; cursor: pointer;
+  }
+  .menu-toggle:hover { background: rgba(255,255,255,.16); }
+  .menu-toggle:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+  .menu-toggle[aria-expanded="false"] { background: var(--mango); color: #13205A; border-color: var(--mango); }
+  .menu-toggle .chev { display: inline-block; transition: transform .2s ease; }
+  .menu-toggle[aria-expanded="false"] .chev { transform: rotate(180deg); }
+  #menuContent { margin-top: 8px; }
+  @media (prefers-reduced-motion: reduce) { .menu-toggle .chev { transition: none; } }
+
   /* ---------- Bulk photos ---------- */
   .bulk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 0 0 16px; }
   .bulk-tip { color: var(--on-bg-muted); font-size: .9rem; max-width: 60ch; }
@@ -974,6 +991,57 @@
   .logo { box-shadow: 0 0 0 5px #FFFFFF, 0 0 0 9px var(--mango), 0 10px 0 9px #0B154A; }
   .pointer { filter: drop-shadow(0 3px 0 #0B154A); }
   .editor, .recipe, .result, .menu-list li, .meal { border-color: #0B154A; }
+
+  /* ---------- Header: logo in the top-left corner, title centred on every screen ---------- */
+  header.brand {
+    --logo-size: clamp(96px, 11vw, 150px);
+    display: grid;
+    grid-template-columns: var(--logo-size) minmax(0, 1fr) var(--logo-size);  /* empty right column keeps the title truly centred */
+    align-items: center;
+    gap: 16px;
+    max-width: none;
+    margin: 0 0 26px;
+  }
+  header.brand .logo { grid-column: 1; width: var(--logo-size); align-self: start; }
+  header.brand .brand-text { grid-column: 2; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
+  header.brand .intro { display: block; margin: 14px auto 0; text-align: center; }
+  @media (max-width: 1180px) {
+    header.brand { --logo-size: clamp(84px, 11vw, 120px); }
+    h1.wordmark { font-size: clamp(2.2rem, 5.8vw, 4.2rem); }
+  }
+  /* Phones: the time goes in the Auto button, so the extra line can go */
+  @media (max-width: 700px), (orientation: landscape) and (max-height: 520px) {
+    .auto-text { display: none; }
+    .auto-btn { white-space: nowrap; }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    .auto-row { margin: -4px 0 12px; }
+    .auto-btn { font-size: .78rem; padding: 4px 10px; min-height: 36px; }
+  }
+  @media (max-width: 700px) {
+    header.brand { --logo-size: 60px; gap: 10px; margin-bottom: 16px; }
+    header.brand .logo { align-self: center; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 5px var(--mango), 0 5px 0 5px #0B154A; }
+    h1.wordmark { font-size: clamp(1.55rem, 7.5vw, 2.4rem); }
+    .bakbak { margin-top: 6px; }
+    header.brand .intro { display: none; }
+  }
+  @media (max-width: 360px) { header.brand { --logo-size: 48px; gap: 8px; } }
+  /* Tablets and laptops in landscape: size the wheel and slot machine to the screen height so they fit without scrolling */
+  @media (orientation: landscape) and (min-height: 521px) and (max-height: 920px) and (min-width: 861px) {
+    .wheel-wrap { width: min(540px, 100%, calc(100svh - 360px)); }
+    .slot-wrap { width: min(540px, 100%, calc(100svh - 300px) * 1.1); }
+    .reel { --cell: clamp(58px, calc((100svh - 580px) / 3), 96px); }
+    .cell .thumb { width: clamp(30px, calc(var(--cell) - 44px), 52px); height: clamp(30px, calc(var(--cell) - 44px), 52px); }
+  }
+  @media (orientation: landscape) and (max-height: 520px) {
+    header.brand { --logo-size: 48px; gap: 12px; margin-bottom: 10px; }
+    header.brand .logo { align-self: center; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--mango); }
+    header.brand .brand-text { flex-direction: column; }
+    h1.wordmark { font-size: 1.7rem; }
+    .bakbak { margin: 2px 0 0; }
+    .bakbak span { font-size: .9rem; padding: 1px 10px 2px; }
+    header.brand .intro { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -1083,7 +1151,11 @@
     </div>
 
     <div class="menu-col">
-      <h2 class="col-title" id="menuTitle">On the wheel</h2>
+      <div class="menu-head">
+        <h2 class="col-title" id="menuTitle">On the wheel</h2>
+        <button class="menu-toggle" id="menuToggle" type="button" aria-expanded="true" aria-controls="menuContent"><span id="menuToggleText">Hide list</span> <span class="chev" aria-hidden="true">▴</span></button>
+      </div>
+      <div id="menuContent">
       <p class="note menu-hint">The wheel has three rings that spin in opposite directions. Tap an item to see more, or use 📷 to swap the drawing for your own photo.</p>
       <div class="bulk-row">
         <button class="btn" id="bulkPhotos" type="button">📷 Add photos in bulk</button>
@@ -1103,6 +1175,7 @@
           <h3 class="ring-title"><span class="ring-dot dessert" aria-hidden="true"></span>Desserts <span class="ring-where">outer ring</span></h3>
           <ul class="menu-list" id="dessertList"></ul>
         </div>
+      </div>
       </div>
       <p class="status" id="menuStatus" role="status"></p>
       <input type="file" id="photoInput" accept="image/*" class="visually-hidden" tabindex="-1" aria-hidden="true">
@@ -2375,7 +2448,7 @@ function clockText(d = new Date()) {
 function updateAutoUI() {
   autoBtn.setAttribute("aria-pressed", String(autoMeal));
   if (autoMeal) {
-    autoBtn.textContent = "🕒 Auto: on";
+    autoBtn.textContent = `🕒 Auto: on · ${clockText()}`;
     autoText.textContent = `It's ${clockText()}, so ${MEALS.find(x => x.key === meal).label.toLowerCase()} is picked for you.`;
   } else {
     autoBtn.textContent = "🕒 Use the clock";
@@ -3096,7 +3169,8 @@ document.querySelector(".game-switch").addEventListener("keydown", e => {
 });
 
 function reelLists() { return [currentItems(), currentDrinks(), currentDesserts()]; }
-function cellPx(reel) { return parseFloat(getComputedStyle(reel).getPropertyValue("--cell")) || 96; }
+// Measure the real row height (the CSS size can be a clamp() that changes with the screen)
+function cellPx(reel) { return reel.clientHeight / 3 || 96; }
 
 function makeCell(item, ringIdx, idx) {
   const d = document.createElement("div");
@@ -3812,6 +3886,19 @@ document.getElementById("bulkSave").addEventListener("click", () => {
   slotSig = "";
   if (gameStyle === "slots") renderSlotsIdle();
 });
+
+// ---------- Show or hide the "On the wheel" list ----------
+const LIST_KEY = "kain-na-list-hidden";
+const menuToggle = document.getElementById("menuToggle");
+const menuContent = document.getElementById("menuContent");
+function setListHidden(hidden, save) {
+  menuContent.hidden = hidden;
+  menuToggle.setAttribute("aria-expanded", String(!hidden));
+  document.getElementById("menuToggleText").textContent = hidden ? "Show list" : "Hide list";
+  if (save) { try { localStorage.setItem(LIST_KEY, hidden ? "1" : "0"); } catch (e) {} }
+}
+menuToggle.addEventListener("click", () => setListHidden(!menuContent.hidden, true));
+try { setListHidden(localStorage.getItem(LIST_KEY) === "1", false); } catch (e) {}
 
 // ---------- Recipe panel ----------
 const recipeEl = document.getElementById("recipe");
